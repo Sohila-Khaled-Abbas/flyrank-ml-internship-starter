@@ -1,0 +1,156 @@
+{
+  "name": "FlyRank Search Intelligence - Content Refresh Automation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "flyrank-pipeline",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "1. Webhook Trigger / Incoming Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "flyrank-webhook-01"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "lane",
+              "value": "Content Refresh Opportunity Scoring"
+            },
+            {
+              "name": "voice_card",
+              "value": "Direct, plain, data-first, warm, zero fluff"
+            },
+            {
+              "name": "dataset_path",
+              "value": "data/raw/content_refresh_anonymized.csv"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "2. Data Contract & Voice Card Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "python scripts/n8n_pipeline_handler.py"
+      },
+      "name": "3. Execute Python ML Pipeline",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ JSON.parse($json.stdout).leakage_status }}",
+              "value2": "PASSED"
+            }
+          ]
+        }
+      },
+      "name": "4. Leakage Verification Guard",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "DEPLOYED_AND_VERIFIED"
+            },
+            {
+              "name": "paper_url",
+              "value": "https://sohila-khaled-abbas.github.io/flyrank-ml-internship-starter/paper.html"
+            },
+            {
+              "name": "execution_receipt",
+              "value": "={{ $json.stdout }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "5. Publish Success Receipt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1150,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "1. Webhook Trigger / Incoming Request": {
+      "main": [
+        [
+          {
+            "node": "2. Data Contract & Voice Card Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Data Contract & Voice Card Config": {
+      "main": [
+        [
+          {
+            "node": "3. Execute Python ML Pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Execute Python ML Pipeline": {
+      "main": [
+        [
+          {
+            "node": "4. Leakage Verification Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Leakage Verification Guard": {
+      "main": [
+        [
+          {
+            "node": "5. Publish Success Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {}
+}
