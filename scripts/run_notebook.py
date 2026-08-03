@@ -62,3 +62,4 @@ if __name__ == "__main__":
     run_notebook("work/notebooks/w02_ml_task_framing.ipynb")
     run_notebook("work/notebooks/w03_data_contract.ipynb")
     run_notebook("work/notebooks/w04_baseline_score.ipynb")
+    run_notebook("work/notebooks/capstone.ipynb")

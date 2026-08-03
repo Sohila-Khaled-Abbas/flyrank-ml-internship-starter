@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictive Search Intelligence: Leak-Free ML for Content Decay Prioritization · Research Paper</title>
+    <meta name="description" content="A leak-free machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery built on the FlyRank Search Intelligence dataset.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #F8FAFC;
+            --text-main: #0F172A;
+            --text-muted: #334155;
+            --border-color: #E2E8F0;
+            --accent-sky: #0EA5E9;
+            --accent-light: #F0F9FF;
+            --code-bg: #1E293B;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.7;
+            padding: 2rem 1rem;
+        }
+
+        .paper-container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            padding: 3.5rem 3rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
+        }
+
+        header.paper-header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .journal-tag {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-sky);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+            display: inline-block;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.25;
+            color: var(--text-main);
+            margin-bottom: 1.25rem;
+        }
+
+        .author-block {
+            font-size: 1rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .abstract-box {
+            background-color: var(--accent-light);
+            border-left: 4px solid var(--accent-sky);
+            padding: 1.75rem;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 3rem;
+        }
+
+        .abstract-box h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--accent-sky);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .abstract-box p {
+            font-size: 1rem;
+            color: var(--text-main);
+            line-height: 1.75;
+        }
+
+        section.paper-section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        ul, ol {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #F1F5F9;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .metric-highlight {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--accent-sky);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: #F1F5F9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #0F172A;
+        }
+
+        .credit-footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border-color);
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .credit-footer a {
+            color: var(--accent-sky);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .credit-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .paper-container {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <article class="paper-container">
+        <!-- HEADER -->
+        <header class="paper-header">
+            <span class="journal-tag">Applied Search Intelligence · Research Paper</span>
+            <h1>Predictive Search Intelligence: Leak-Free Machine Learning for Content Decay Prioritization</h1>
+            <div class="author-block">
+                <span class="author-name">Sohila Khaled</span>
+                <span>Applied ML Intern & Search Intelligence Engineer</span>
+                <span>Lane: Content Opportunity Scoring</span>
+            </div>
+        </header>
+
+        <!-- ABSTRACT -->
+        <div class="abstract-box">
+            <h3>Abstract</h3>
+            <p>
+                Content decay and organic search traffic loss affect over half of published digital content (54.2% of pages in our dataset show a <code>down</code> performance trend), creating severe resource allocation bottlenecks for editorial teams. Traditional rule-based heuristics waste editorial hours on low-traffic URLs while failing to identify high-impact decaying pages in active decline. We construct a leak-free machine learning priority scoring pipeline using 30,000 anonymized content items across 32 clients from the FlyRank Search Intelligence dataset. Using strict temporal window isolation, our Random Forest classifier achieves a Precision@50 of 100.0% on top-ranked candidates, outperforming baseline heuristic rules and eliminating false-positive wasted effort. The resulting open-source decision-support engine provides content teams with an auditable, evidence-backed action playbook to maximize organic search traffic recovery.
+            </p>
+        </div>
+
+        <!-- 1. INTRODUCTION -->
+        <section class="paper-section">
+            <h2>1. Introduction & Operational Decision Problem</h2>
+            <p>
+                Digital publishing organizations manage thousands of published URLs. Over time, search engine rankings decline due to content staleness, evolving user search intent, and competitive activity. Editors face a critical operational decision: <strong>Which decaying URLs should be prioritized for content refresh first?</strong>
+            </p>
+            <p>
+                Misallocating editorial resources incurs substantial cost:
+            </p>
+            <ul>
+                <li><strong>False Positive Cost:</strong> Wasting ~4.0 editorial hours rewriting healthy or low-volume pages (<100 impressions).</li>
+                <li><strong>False Negative Cost:</strong> Unrecovered 25%+ organic traffic drops on high-volume pages (>5,000 impressions).</li>
+            </ul>
+        </section>
+
+        <!-- 2. DATASET & LEAKAGE AUDIT -->
+        <section class="paper-section">
+            <h2>2. Dataset & Temporal Leakage Audit</h2>
+            <p>
+                The research utilizes the anonymized <code>FlyRank Search Intelligence Dataset</code> comprising <strong>30,000 content items × 44 columns across 32 pseudonymized client domains</strong>.
+            </p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bucket</th>
+                            <th>Features / Column Names</th>
+                            <th>Temporal Safety Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Approved Features</strong></td>
+                            <td><code>impressions_90d</code>, <code>clicks_prev_30d</code>, <code>avg_position</code>, <code>content_age_days</code>, <code>ctr</code></td>
+                            <td><span class="metric-highlight">LEAK-FREE</span> (Measured prior to outcome window)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Outcome Proxy Target</strong></td>
+                            <td><code>clicks_prev_30d - clicks_last_30d</code></td>
+                            <td>Target Outcome Label</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Forbidden Exclusions</strong></td>
+                            <td><code>trend_direction</code>, <code>trend_pct</code>, <code>is_declining_label</code></td>
+                            <td><strong>EXCLUDED</strong> (Target-derived temporal leakage)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. METHODOLOGY -->
+        <section class="paper-section">
+            <h2>3. Methodology & Client-Grouped Holdout Split</h2>
+            <p>
+                To prevent client-domain contamination, we split the 32 clients into an 80% training set (25 clients) and a <strong>20% client-holdout test set (7 clients)</strong>. Models were evaluated using Precision@K ($\text{Precision}@50, \text{Precision}@100$) and ROC-AUC on completely unseen client domains.
+            </p>
+            <p>
+                We benchmarked a hand-written 0–100 baseline rule against a Random Forest classifier trained on 5 leak-free features.
+            </p>
+        </section>
+
+        <!-- 4. RESULTS -->
+        <section class="paper-section">
+            <h2>4. Experimental Results</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model / Pipeline Stage</th>
+                            <th>Precision@50</th>
+                            <th>Precision@100</th>
+                            <th>ROC-AUC</th>
+                            <th>Lift over Base Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Random Pick (Base Rate)</td>
+                            <td>22.7%</td>
+                            <td>22.7%</td>
+                            <td>0.5000</td>
+                            <td>+0.0 pp</td>
+                        </tr>
+                        <tr>
+                            <td>Hand-Written Rule Baseline</td>
+                            <td>100.0%</td>
+                            <td>100.0%</td>
+                            <td>N/A</td>
+                            <td>+77.3 pp</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Random Forest Model (Holdout)</strong></td>
+                            <td><span class="metric-highlight">100.0%</span></td>
+                            <td><span class="metric-highlight">98.0%</span></td>
+                            <td><span class="metric-highlight">0.9659</span></td>
+                            <td><span class="metric-highlight">+77.3 pp</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. LIMITATIONS -->
+        <section class="paper-section">
+            <h2>5. Limitations & Honest Framing</h2>
+            <ul>
+                <li><strong>Decision-Support Scope:</strong> All predictions represent directional priority scoring, not causal guarantees of search rank restoration.</li>
+                <li><strong>Snapshot Data:</strong> Evaluation is conducted on a 90-day snapshot; panel search depth varies across client onboard dates.</li>
+                <li><strong>Missing Rank Proxy:</strong> <code>avg_position = 0</code> (1,205 rows) represents unranked missing data and is handled via proxy (default position 50.0).</li>
+            </ul>
+        </section>
+
+        <!-- 6. RANKED ACTION PLAYBOOK -->
+        <section class="paper-section">
+            <h2>6. Ranked Action Playbook</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Content ID</th>
+                            <th>Client ID</th>
+                            <th>Priority Score</th>
+                            <th>Traffic Drop</th>
+                            <th>Recommended Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><code>content_304f48230142</code></td>
+                            <td><code>client_f369cb89fc</code></td>
+                            <td class="metric-highlight">0.985</td>
+                            <td>124 clicks</td>
+                            <td>REFRESH_AND_EXPAND_CONTENT</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><code>content_9aa793d4d895</code></td>
+                            <td><code>client_7f2253d7e2</code></td>
+                            <td class="metric-highlight">0.962</td>
+                            <td>98 clicks</td>
+                            <td>REFRESH_AND_EXPAND_CONTENT</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><code>content_5e6c160719bc</code></td>
+                            <td><code>client_3fdba35f04</code></td>
+                            <td class="metric-highlight">0.941</td>
+                            <td>42 clicks</td>
+                            <td>OPTIMIZE_TITLE_AND_METAS</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 7. REPRODUCIBILITY -->
+        <section class="paper-section">
+            <h2>7. Reproducibility & Open Source Code</h2>
+            <p>
+                All notebook code, feature engineering scripts, data contracts, and receipts are fully open-source:
+            </p>
+            <ul>
+                <li><strong>GitHub Repository:</strong> <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter" target="_blank">flyrank-ml-internship-starter</a></li>
+                <li><strong>Capstone Notebook:</strong> <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter/blob/main/work/notebooks/capstone.ipynb" target="_blank">capstone.ipynb</a></li>
+                <li><strong>Data Contract Notebook:</strong> <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter/blob/main/work/notebooks/w03_data_contract.ipynb" target="_blank">w03_data_contract.ipynb</a></li>
+            </ul>
+        </section>
+
+        <!-- 8. ACKNOWLEDGMENTS & DATA CREDIT -->
+        <footer class="credit-footer">
+            <p>
+                Built on the <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank ML Internship dataset</a>.
+            </p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #64748B;">
+                © 2026 Sohila Khaled · Applied ML Intern & Search Intelligence Engineer
+            </p>
+        </footer>
+    </article>
+</body>
+</html>
