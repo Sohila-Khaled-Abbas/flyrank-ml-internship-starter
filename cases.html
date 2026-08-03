@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framed Case Studies · Sohila Khaled Portfolio</title>
+    <meta name="description" content="Framed Search Intelligence case studies covering content refresh opportunity scoring, signal audits, and temporal leakage prevention.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #F8FAFC;
+            --text-main: #0F172A;
+            --text-muted: #475569;
+            --border-color: #E2E8F0;
+            --accent-sky: #0EA5E9;
+            --accent-light: #E0F2FE;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-canvas); color: var(--text-main); font-family: var(--font-body); line-height: 1.6; padding: 2rem; min-height: 100vh; }
+        .container { max-width: 860px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2.5rem; }
+        .brand { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-main); text-decoration: none; }
+        .brand span { color: var(--accent-sky); }
+        nav { display: flex; gap: 1.5rem; font-family: var(--font-mono); font-size: 0.9rem; }
+        nav a { color: var(--text-muted); text-decoration: none; font-weight: 500; }
+        nav a.active, nav a:hover { color: var(--accent-sky); }
+
+        h1 { font-family: var(--font-heading); font-size: 2.25rem; margin-bottom: 2rem; }
+        .case-card { background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        .case-tag { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-sky); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block; }
+        .case-card h2 { font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-main); }
+        .beat { margin-bottom: 1.25rem; }
+        .beat-title { font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem; }
+        .beat p { color: var(--text-muted); font-size: 0.95rem; }
+        
+        .metric-pill { display: inline-block; background: var(--accent-light); color: var(--accent-sky); font-family: var(--font-mono); font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 6px; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="brand"><span>[</span> SK <span>]</span> Sohila Khaled</a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="cases.html" class="active">Case Studies</a>
+                <a href="paper.html">Research Paper</a>
+                <a href="about.html">About</a>
+            </nav>
+        </header>
+
+        <main>
+            <h1>Framed Case Studies</h1>
+
+            <!-- CASE STUDY 1 -->
+            <article class="case-card">
+                <span class="case-tag">Case Study 01 · Primary Machine Learning Lane</span>
+                <h2>Content Refresh Opportunity Scoring</h2>
+                <div class="beat">
+                    <div class="beat-title">Beat 1: The Problem</div>
+                    <p>Content marketing teams waste ~4.0 hours per article manually rewriting decaying posts based on arbitrary staleness rules. Traditional static heuristics flag old pages regardless of traffic impact, leading to a high rate of false positive effort on zero-traffic URLs.</p>
+                </div>
+                <div class="beat">
+                    <div class="beat-title">Beat 2: What I Did & Decided</div>
+                    <p>I engineered a leak-free Random Forest priority scoring model using 30,000 anonymized content items across 32 clients from the FlyRank Search Intelligence dataset. I explicitly isolated target-derived features (trend_pct, is_declining_label) and evaluated performance using an 80/20 grouped client holdout split.</p>
+                </div>
+                <div class="beat">
+                    <div class="beat-title">Beat 3: What Came of It</div>
+                    <p>Our model achieved a Precision@50 of 100.0% on unseen client holdout domains, providing content strategists with an automated, auditable action queue that eliminates false positive editorial rewrites.</p>
+                    <div class="metric-pill">Precision@50: 100.0% | Holdout ROC-AUC: 0.9659</div>
+                </div>
+            </article>
+
+            <!-- CASE STUDY 2 -->
+            <article class="case-card">
+                <span class="case-tag">Case Study 02 · Signal Verification</span>
+                <h2>Search Rank Volatility & Position Tier Audit</h2>
+                <div class="beat">
+                    <div class="beat-title">Beat 1: The Problem</div>
+                    <p>SEO teams frequently confuse normal rank fluctuation in top positions with active search traffic decay, leading to premature title tag changes on healthy URLs.</p>
+                </div>
+                <div class="beat">
+                    <div class="beat-title">Beat 2: What I Did & Decided</div>
+                    <p>I conducted a signal audit across Google position tiers (Top 3 vs Pos 4-10 vs Pos 11-20), computing decay rates with explicit sample sizes (n). I confirmed that pages in position 4-10 with low CTR represent the highest-value optimization targets.</p>
+                </div>
+                <div class="beat">
+                    <div class="beat-title">Beat 3: What Came of It</div>
+                    <p>Defined a transparent rule baseline yielding +77.3 percentage point lift over random base rate selection.</p>
+                    <div class="metric-pill">Audited Dataset: 28,795 Ranked URLs</div>
+                </div>
+            </article>
+        </main>
+    </div>
+</body>
+</html>

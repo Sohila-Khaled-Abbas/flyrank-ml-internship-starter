@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About & Bio · Sohila Khaled Portfolio</title>
+    <meta name="description" content="Bio and contact details for Sohila Khaled, Applied ML Intern & Search Intelligence Engineer.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #F8FAFC;
+            --text-main: #0F172A;
+            --text-muted: #475569;
+            --border-color: #E2E8F0;
+            --accent-sky: #0EA5E9;
+            --accent-light: #E0F2FE;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-canvas); color: var(--text-main); font-family: var(--font-body); line-height: 1.6; padding: 2rem; min-height: 100vh; }
+        .container { max-width: 860px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2.5rem; }
+        .brand { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-main); text-decoration: none; }
+        .brand span { color: var(--accent-sky); }
+        nav { display: flex; gap: 1.5rem; font-family: var(--font-mono); font-size: 0.9rem; }
+        nav a { color: var(--text-muted); text-decoration: none; font-weight: 500; }
+        nav a.active, nav a:hover { color: var(--accent-sky); }
+
+        h1 { font-family: var(--font-heading); font-size: 2.25rem; margin-bottom: 1.5rem; }
+        .bio-card { background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); margin-bottom: 2rem; }
+        .bio-card p { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem; }
+        .cta-btn { display: inline-block; background-color: var(--accent-sky); color: #FFFFFF; font-family: var(--font-heading); font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
+        .cta-btn:hover { background-color: #0284C7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="brand"><span>[</span> SK <span>]</span> Sohila Khaled</a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="cases.html">Case Studies</a>
+                <a href="paper.html">Research Paper</a>
+                <a href="about.html" class="active">About</a>
+            </nav>
+        </header>
+
+        <main>
+            <h1>About & Contact</h1>
+
+            <div class="bio-card">
+                <p>
+                    I am an <strong>Applied ML Intern & Search Intelligence Engineer</strong> focused on building leak-free machine learning systems that replace editorial intuition with evidence-backed decision support.
+                </p>
+                <p>
+                    During the FlyRank ML Internship, I designed a content refresh priority scoring engine trained on 30,000 anonymized URLs across 32 clients. My work prioritizes data contracts, rigorous client-grouped validation, and open-source reproducibility.
+                </p>
+                <p>
+                    <strong>Voice Card:</strong> Direct, plain, data-first, warm, zero fluff.
+                </p>
+
+                <div style="margin-top: 2rem;">
+                    <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter" target="_blank" class="cta-btn">View GitHub Repository</a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

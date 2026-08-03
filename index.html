@@ -41,7 +41,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 860px;
             margin: 0 auto;
             width: 100%;
         }
@@ -50,7 +50,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 2rem;
+            padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 3rem;
         }
@@ -70,6 +70,23 @@
             color: var(--accent-sky);
         }
 
+        nav {
+            display: flex;
+            gap: 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        nav a.active, nav a:hover {
+            color: var(--accent-sky);
+        }
+
         .status-badge {
             background-color: var(--accent-light);
             color: var(--accent-sky);
@@ -78,9 +95,10 @@
             padding: 0.35rem 0.75rem;
             border-radius: 9999px;
             border: 1px solid rgba(14, 165, 233, 0.3);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .status-dot {
@@ -88,13 +106,6 @@
             height: 8px;
             background-color: var(--accent-sky);
             border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
         }
 
         .hero {
@@ -114,7 +125,7 @@
         .lead-claim {
             font-size: 1.25rem;
             color: var(--text-muted);
-            max-width: 680px;
+            max-width: 720px;
             margin-bottom: 2rem;
         }
 
@@ -129,40 +140,42 @@
 
         .card h2 {
             font-family: var(--font-heading);
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 600;
             margin-bottom: 1rem;
         }
 
         .card p {
             color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
         }
 
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        .cta-group {
+            display: flex;
             gap: 1rem;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
         }
 
-        .meta-item {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
+        .cta-primary {
+            background-color: var(--accent-sky);
+            color: #FFFFFF;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
         }
 
-        .meta-item .label {
-            color: var(--text-muted);
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .meta-item .value {
+        .cta-secondary {
+            background-color: #F1F5F9;
             color: var(--text-main);
-            font-weight: 500;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
         }
 
         footer {
@@ -172,51 +185,39 @@
             font-size: 0.875rem;
             color: var(--text-muted);
         }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 1rem;
-            }
-            h1 {
-                font-size: 2rem;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <a href="#" class="brand-monogram"><span>[</span> SK <span>]</span> Sohila Khaled</a>
-            <div class="status-badge">
-                <span class="status-dot"></span>
-                <span>EMPTY BUT LIVE</span>
-            </div>
+            <a href="index.html" class="brand-monogram"><span>[</span> SK <span>]</span> Sohila Khaled</a>
+            <nav>
+                <a href="index.html" class="active">Home</a>
+                <a href="cases.html">Case Studies</a>
+                <a href="paper.html">Research Paper</a>
+                <a href="about.html">About</a>
+            </nav>
         </header>
 
         <main class="hero">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>LIVE & REASONED · WEEK 5 BUILD</span>
+            </div>
+
             <h1>Search Intelligence & Content Decay Prioritization</h1>
             <p class="lead-claim">
                 I build leak-free machine learning systems that prioritize content refreshes, turning decaying organic search traffic into high-ROI editorial action.
             </p>
 
             <div class="card">
-                <h2>🚀 Build Milestone: Phase 4 Locked</h2>
+                <h2>📊 Primary Research Deliverable</h2>
                 <p>
-                    This live URL verifies the deployment pipeline foundation for the FlyRank ML Internship. All case studies, data contracts, and custom Claude tutor instructions are configured and ready for full assembly.
+                    Inspect our capstone research paper evaluating a Random Forest priority model across 30,000 anonymized URLs and 32 client domains, achieving a Precision@50 of 100.0% on unseen holdout clients.
                 </p>
-                <div class="meta-grid">
-                    <div class="meta-item">
-                        <span class="label">Repository:</span>
-                        <span class="value">flyrank-ml-internship-starter</span>
-                    </div>
-                    <div class="meta-item">
-                        <span class="label">Identity Kit:</span>
-                        <span class="value">Outfit / Inter / #0EA5E9</span>
-                    </div>
-                    <div class="meta-item">
-                        <span class="label">Primary Metric:</span>
-                        <span class="value">Precision@50 Baseline</span>
-                    </div>
+                <div class="cta-group">
+                    <a href="paper.html" class="cta-primary">Read Research Paper</a>
+                    <a href="cases.html" class="cta-secondary">View Framed Case Studies</a>
                 </div>
             </div>
         </main>

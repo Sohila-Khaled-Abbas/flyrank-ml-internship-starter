@@ -23,19 +23,15 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-canvas); color: var(--text-main); font-family: var(--font-body); line-height: 1.7; padding: 2rem 1rem; }
 
-        body {
-            background-color: var(--bg-canvas);
-            color: var(--text-main);
-            font-family: var(--font-body);
-            line-height: 1.7;
-            padding: 2rem 1rem;
-        }
+        .site-nav-container { max-width: 860px; margin: 0 auto 2rem auto; display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+        .brand { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-main); text-decoration: none; }
+        .brand span { color: var(--accent-sky); }
+        nav { display: flex; gap: 1.5rem; font-family: var(--font-mono); font-size: 0.9rem; }
+        nav a { color: #475569; text-decoration: none; font-weight: 500; }
+        nav a.active, nav a:hover { color: var(--accent-sky); }
 
         .paper-container {
             max-width: 860px;
@@ -192,22 +188,19 @@
             text-decoration: none;
             font-weight: 600;
         }
-
-        .credit-footer a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 640px) {
-            .paper-container {
-                padding: 1.5rem;
-            }
-            h1 {
-                font-size: 1.8rem;
-            }
-        }
     </style>
 </head>
 <body>
+    <div class="site-nav-container">
+        <a href="index.html" class="brand"><span>[</span> SK <span>]</span> Sohila Khaled</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="cases.html">Case Studies</a>
+            <a href="paper.html" class="active">Research Paper</a>
+            <a href="about.html">About</a>
+        </nav>
+    </div>
+
     <article class="paper-container">
         <!-- HEADER -->
         <header class="paper-header">
