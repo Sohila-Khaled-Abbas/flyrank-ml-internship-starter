@@ -1,0 +1,26 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//FlyRank ML Internship//Portfolio Maintenance Reminder//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+SUMMARY:[Portfolio Maintenance] Draft & Deploy Case Study 03: SERP Intent Shift Classifier
+UID:case-study-03-reminder-20260824@flyrank.ai
+DTSTART:20260824T060000Z
+DTEND:20260824T070000Z
+RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=20260930T235959Z
+DESCRIPTION:Time to update the FlyRank ML portfolio with Case Study 03!\n\nNamed Project: Automated SERP Intent Shift Classifier & Organic Cannibalization Monitor.\n\nSteps:\n1. Open Claude Project / Assistant with system instructions from CLAUDE.md.\n2. Provide project metrics & outcome (Beat 1: Problem, Beat 2: What I did, Beat 3: What came of it).\n3. Paste generated <article class="case-card"> into cases.html.\n4. Run git commit & push to deploy.
+LOCATION:cases.html (https://sohila-khaled-abbas.github.io/flyrank-ml-internship-starter/cases.html)
+STATUS:CONFIRMED
+BEGIN:VALARM
+TRIGGER:-P2D
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 2 days left to draft Case Study 03 for portfolio update.
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Starting portfolio update: Add Case Study 03 to cases.html.
+END:VALARM
+END:VEVENT
+END:VCALENDAR

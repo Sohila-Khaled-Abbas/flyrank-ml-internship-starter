@@ -1,0 +1,8 @@
+{
+  "model_name": "RandomForestClassifier",
+  "test_roc_auc": 0.9387,
+  "precision_at_50": 1.0,
+  "precision_at_100": 1.0,
+  "holdout_clients": 7,
+  "test_rows": 7611
+}
