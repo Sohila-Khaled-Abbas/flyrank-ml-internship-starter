@@ -554,16 +554,16 @@ def build_w07_action_playbook():
     "\n",
     "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Sohila-Khaled-Abbas/flyrank-ml-internship-starter/blob/main/work/notebooks/w07_action_playbook.ipynb?flush_cache=true)\n",
     "\n",
-    "Generating the final ranked content refresh recommendation playbook with action labels."
+    "Generating the final ranked content refresh recommendation playbook with human-readable reason codes, intended use bounds, human-review rules, monitoring retrain triggers, and export files."
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## 1. Ranked Recommendation Playbook\n",
+    "## 1. Ranked actions + reason codes\n",
     "\n",
-    "*Mapping top scores to explicit editorial action labels.*"
+    "*Mapping top priority scores to human-readable reason codes and explicit editorial action labels.*"
    ]
   },
   {
@@ -591,11 +591,90 @@ def build_w07_action_playbook():
     "rf.fit(df[features], df[\"target_binary\"])\n",
     "\n",
     "df[\"model_score\"] = rf.predict_proba(df[features])[:, 1]\n",
-    "df[\"action_label\"] = np.where(df[\"click_drop\"] > 50, \"REFRESH_AND_EXPAND_CONTENT\", \"OPTIMIZE_TITLE_AND_METAS\")\n",
+    "\n",
+    "conditions = [\n",
+    "    (df[\"click_drop\"] > 10) & (df[\"impressions_90d\"] > 1000),\n",
+    "    (df[\"content_age_days\"] > 180) & (df[\"click_drop\"] > 0),\n",
+    "    (df[\"avg_position\"] >= 4) & (df[\"avg_position\"] <= 10) & (df[\"ctr\"] < 1.0)\n",
+    "]\n",
+    "reason_codes = [\"STEEP_DROP_HIGH_VOLUME\", \"STALE_CONTENT_DECAY\", \"CTR_POSITION_UNDERPERFORMER\"]\n",
+    "action_labels = [\"REFRESH_AND_EXPAND_CONTENT\", \"UPDATE_STATISTICS_AND_FRESHNESS\", \"OPTIMIZE_TITLE_AND_META_TAGS\"]\n",
+    "\n",
+    "df[\"reason_code\"] = np.select(conditions, reason_codes, default=\"MONITOR_PERFORMANCE\")\n",
+    "df[\"action_label\"] = np.select(conditions, action_labels, default=\"NO_ACTION_NEEDED\")\n",
     "\n",
     "ranked_playbook = df.sort_values(by=\"model_score\", ascending=False)\n",
-    "print(\"=== TOP 10 RECOMMENDATIONS PLAYBOOK ===\")\n",
-    "print(ranked_playbook[[\"content_id\", \"client_id\", \"model_score\", \"click_drop\", \"action_label\"]].head(10).to_string(index=False))\n"
+    "print(\"=== TOP 10 RANKED ACTION PLAYBOOK QUEUE ===\")\n",
+    "print(ranked_playbook[[\"content_id\", \"client_id\", \"model_score\", \"click_drop\", \"reason_code\", \"action_label\"]].head(10).to_string(index=False))\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 2. Intended use and limits\n",
+    "\n",
+    "### **Intended Use**\n",
+    "- Decision-support priority scoring to guide content editorial teams toward high-ROI refresh candidates.\n",
+    "\n",
+    "### **Known Limits**\n",
+    "- **Non-Causal**: Model ranks observed traffic decay opportunity; it does not guarantee search engine rank restoration.\n",
+    "- **Snapshot Data**: Evaluation is based on a 90-day static window snapshot; seasonal traffic variations require human context.\n",
+    "- **Unranked Proxy**: Pages with `avg_position = 0` are assigned a default proxy position of `50.0`."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 3. Human review + the no-go list\n",
+    "\n",
+    "### **Human Review Rules**\n",
+    "1. Editors must read the target URL before making updates to confirm that current search intent matches the refresh topic.\n",
+    "2. Verify that traffic decline is not caused by permanent brand query shifts or product deprecation.\n",
+    "\n",
+    "### **No-Go List (What NOT to Automate)**\n",
+    "- 🚫 **Auto-Publishing AI Content**: Never automatically publish AI-generated text directly to live CMS without human editor review.\n",
+    "- 🚫 **Automated 301 Redirects**: Never auto-redirect or delete URLs based solely on low model priority scores.\n",
+    "- 🚫 **Automated Site-wide Title Changes**: Never run bulk automated meta updates across entire client domains without human verification."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 4. Monitoring / retrain triggers\n",
+    "\n",
+    "- **Monitoring**: Track post-refresh CTR and click recovery over a 30-day post-update window.\n",
+    "- **Retrain Triggers**:\n",
+    "  1. *Precision Drop*: Retrain model if Precision@50 on weekly holdout data drops below 85%.\n",
+    "  2. *Domain Distribution Shift*: Retrain model when new client domain profiles (e.g. e-commerce vs SaaS) are onboarded."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 5. Exports for the paper\n",
+    "\n",
+    "*Exporting the ranked action queue CSV to `work/outputs/action_playbook_queue.csv` and metrics receipt.*"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": None,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "output_dir = \"../../work/outputs\"\n",
+    "if not os.path.exists(output_dir):\n",
+    "    output_dir = \"work/outputs\"\n",
+    "os.makedirs(output_dir, exist_ok=True)\n",
+    "\n",
+    "export_cols = [\"content_id\", \"client_id\", \"model_score\", \"reason_code\", \"action_label\", \"impressions_90d\", \"clicks_90d\", \"content_age_days\", \"click_drop\"]\n",
+    "export_path = os.path.join(output_dir, \"action_playbook_queue.csv\")\n",
+    "ranked_playbook[export_cols].to_csv(export_path, index=False)\n",
+    "print(f\"Successfully exported action playbook queue ({len(ranked_playbook):,} rows) to: {export_path}\")\n"
    ]
   },
   {
