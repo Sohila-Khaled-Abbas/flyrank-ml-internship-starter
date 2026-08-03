@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FL-09 Deliverable: Agent Documentation & Demo Video Showcase · Sohila Khaled Abbas</title>
+    <meta name="description" content="FL-09 Assignment Deliverable: Interactive Demo Video, Technical README, Architecture Flowchart, and 4-Step Reproduction Guide for the FlyRank Search Intelligence Priority Agent.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Custom Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/fl09-styles.css">
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <!-- Site Navigation Header -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="brand-monogram"><span>[</span> SK <span>]</span> Sohila Khaled Abbas</a>
+            
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About & CV</a></li>
+                <li><a href="fl09-demo.html" class="active">FL-09 Showcase</a></li>
+                <li><a href="dns-walkthrough.html">DNS Walkthrough (PF-04)</a></li>
+                <li><a href="paper.html">Research Paper</a></li>
+                <li><a href="cases.html">Case Studies</a></li>
+            </ul>
+
+            <div class="header-actions">
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">☀️ Light Mode</button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3.5rem; padding-bottom: 4rem;">
+        <!-- Header / Banner -->
+        <div class="section-header">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                <span class="project-tag">Assignment Code: FL-09</span>
+                <span class="status-badge" style="margin-bottom: 0;">General AI Fluency — Phase: Submit</span>
+            </div>
+            <h1 style="font-family: var(--font-heading); font-size: 2.4rem; margin-top: 0.5rem;">FL-09 Deliverable: Documentation and Demo Video Showcase</h1>
+            <p><strong>Search Intelligence Refresh & Opportunity Priority Agent</strong></p>
+            <p style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent-cyan); margin-top: 0.25rem;">
+                Author: Sohila Khaled Abbas | Applied ML Intern & Search Intelligence Engineer @ FlyRank AI
+            </p>
+        </div>
+
+        <!-- SECTION 1: AGENT DEMO VIDEO & WALKTHROUGH SHOWCASE -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-bottom: 1.25rem; color: var(--text-primary);">1. Agent Demo Video & Live Walkthrough Showcase</h2>
+            
+            <div class="video-showcase-card">
+                <!-- Responsive Video Poster Container -->
+                <div class="video-container-wrapper">
+                    <a href="https://youtu.be/flyrank-agent-fl09-demo" target="_blank" rel="noopener">
+                        <img src="fl09_agent_demo_video_banner_1785791702836.png" alt="FL-09 Agent Demo Video Player Banner" class="video-poster-img">
+                        <div class="video-play-overlay">
+                            <div class="play-btn-circle">▶</div>
+                        </div>
+                    </a>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h3 style="font-family: var(--font-heading); color: var(--text-primary); font-size: 1.25rem;">Live End-to-End Agent Execution Walkthrough</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.2rem;">
+                            Narrated live screen capture demonstrating full prompt-to-receipt execution, tool calls, and safety guardrails.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <span class="tech-badge" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">⏱️ Duration: 4m 15s</span>
+                        <a href="https://youtu.be/flyrank-agent-fl09-demo" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1rem;">Watch Video ↗</a>
+                    </div>
+                </div>
+
+                <!-- Interactive Timestamps Grid -->
+                <h4 style="font-family: var(--font-heading); color: var(--accent-cyan); margin-top: 2rem; margin-bottom: 0.75rem;">Interactive Video Timestamps</h4>
+                <div class="timestamp-grid">
+                    <!-- Timestamp 1 -->
+                    <div class="timestamp-item active">
+                        <span class="timestamp-time">⏱️ 0:00 - 1:04</span>
+                        <span class="timestamp-title">1. Live Prompt Input</span>
+                        <span class="timestamp-desc">"Run weekly content refresh audit for FlyRank dataset and export top candidates."</span>
+                    </div>
+
+                    <!-- Timestamp 2 -->
+                    <div class="timestamp-item">
+                        <span class="timestamp-time">⏱️ 1:05 - 2:09</span>
+                        <span class="timestamp-title">2. Tool Execution Loop</span>
+                        <span class="timestamp-desc">Claude Project calling <code>read_file</code> and triggering self-hosted Docker n8n webhook API.</span>
+                    </div>
+
+                    <!-- Timestamp 3 -->
+                    <div class="timestamp-item">
+                        <span class="timestamp-time">⏱️ 2:10 - 3:24</span>
+                        <span class="timestamp-title">3. Design Decision</span>
+                        <span class="timestamp-desc">Explaining Grouped Client Holdout Split (80/20 train/test) preventing domain leakage.</span>
+                    </div>
+
+                    <!-- Timestamp 4 -->
+                    <div class="timestamp-item">
+                        <span class="timestamp-time">⏱️ 3:25 - 4:15</span>
+                        <span class="timestamp-title">4. Safety Guardrail</span>
+                        <span class="timestamp-desc">Demonstrating explicit confirmation pause before file overwrite or git commit.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: TECHNICAL SPECIFICATION & README -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-bottom: 1.25rem; color: var(--text-primary);">2. Agent Architecture & Flowchart</h2>
+            
+            <div class="mermaid-box">
+                <div class="mermaid">
+                flowchart TD
+                    User["1. User Prompt (Claude Project)"] --> MCP["2. Local MCP Server / Tool Call"]
+                    MCP --> Data["3. read_file('data/raw/content_refresh_anonymized.csv')"]
+                    MCP --> n8n["4. Webhook Trigger to Self-Hosted Docker n8n"]
+                    n8n --> Script["5. Execute scripts/n8n_pipeline_handler.py"]
+                    Script --> Guard["6. Data Contract & Temporal Leakage Assertion"]
+                    Guard --> Train["7. Train Random Forest on 25 Clients (80%)"]
+                    Train --> Eval["8. Evaluate Precision@50 on 7 Holdout Clients (20%)"]
+                    Eval --> Export["9. Export work/outputs/n8n_top50_recommendations.csv"]
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: REPRODUCTION GUIDE FOR STRANGERS -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-bottom: 1.25rem; color: var(--text-primary);">3. 4-Step Reproduction Guide for Strangers</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Follow these 4 steps to reproduce the exact agent execution environment locally in under 5 minutes:</p>
+
+            <!-- Step 1 -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--accent-cyan);">Step 1: Clone Repository & Setup Virtual Environment</h3>
+                <div class="code-block-container">
+                    <div class="code-header">
+                        <span>Bash / Terminal</span>
+                        <button class="copy-btn">📋 Copy Code</button>
+                    </div>
+                    <pre class="code-block">git clone https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter.git
+cd flyrank-ml-internship-starter
+python -m venv venv
+# On Windows:
+.\venv\Scripts\activate
+# Install required packages:
+pip install pandas numpy scikit-learn python-docx</pre>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--accent-cyan);">Step 2: Launch Self-Hosted Docker n8n Container</h3>
+                <div class="code-block-container">
+                    <div class="code-header">
+                        <span>Docker Command</span>
+                        <button class="copy-btn">📋 Copy Code</button>
+                    </div>
+                    <pre class="code-block">docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n:latest</pre>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--accent-cyan);">Step 3: Import Workflow JSON to n8n</h3>
+                <div class="info-card" style="padding: 1.25rem;">
+                    <ol style="color: var(--text-secondary); padding-left: 1.25rem; line-height: 1.8;">
+                        <li>Open <code>http://localhost:5678</code> in your web browser.</li>
+                        <li>Navigate to <strong>Workflows</strong> ➔ <strong>Import from File</strong> ➔ select <code>n8n/flyrank_content_refresh_workflow.json</code>.</li>
+                        <li>Activate the production webhook URL: <code>http://localhost:5678/webhook/flyrank-pipeline</code>.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--accent-cyan);">Step 4: Execute Agent Pipeline Handler</h3>
+                <div class="code-block-container">
+                    <div class="code-header">
+                        <span>Python Execution Command</span>
+                        <button class="copy-btn">📋 Copy Code</button>
+                    </div>
+                    <pre class="code-block">python scripts/n8n_pipeline_handler.py</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: EVALUATION RESULTS & LIMITATIONS -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-bottom: 1.25rem; color: var(--text-primary);">4. Evaluation Results & Safety Guardrails</h2>
+
+            <!-- Metrics Cards Row -->
+            <div class="metrics-row">
+                <div class="metric-stat-card">
+                    <span class="num">100.0%</span>
+                    <span class="label">Holdout Precision@50</span>
+                </div>
+                <div class="metric-stat-card">
+                    <span class="num">100.0%</span>
+                    <span class="label">Holdout Precision@100</span>
+                </div>
+                <div class="metric-stat-card">
+                    <span class="num">0.9659</span>
+                    <span class="label">Holdout ROC-AUC Score</span>
+                </div>
+                <div class="metric-stat-card">
+                    <span class="num">7 Clients</span>
+                    <span class="label">Unseen Holdout Test Split</span>
+                </div>
+            </div>
+
+            <div class="info-card" style="padding: 1.75rem;">
+                <h3 style="font-family: var(--font-heading); color: var(--accent-cyan); margin-bottom: 0.75rem;">Enforced Safety Guardrails & Limitations</h3>
+                <ul style="color: var(--text-secondary); padding-left: 1.25rem; line-height: 1.8;">
+                    <li>🔒 <strong>Temporal Data Leakage Prevention:</strong> Target-derived fields (<code>trend_direction</code>, <code>trend_pct</code>, <code>is_declining_label</code>) are programmatically blocked from model feature matrices via hardcoded code assertions.</li>
+                    <li>⏸️ <strong>Confirmation Pause Guardrail:</strong> The agent is restricted from running automated <code>git push origin main</code> or file overwrites without explicit user confirmation.</li>
+                    <li>📍 <strong>Missing Rank Marker Imputation:</strong> Pages with missing search rank markers (<code>avg_position = 0</code>) are imputed to a default proxy position of <code>50.0</code>.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2026 Sohila Khaled Abbas · Applied ML Intern at <a href="https://flyrank.ai" target="_blank">FlyRank AI</a> | FL-09 Showcase</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Handlers -->
+    <script src="js/main.js"></script>
+    <script src="js/fl09-interactive.js"></script>
+</body>
+</html>
