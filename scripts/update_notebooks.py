@@ -164,7 +164,7 @@ w02_notebook = {
     "\n",
     "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Sohila-Khaled-Abbas/flyrank-ml-internship-starter/blob/main/work/notebooks/w02_ml_task_framing.ipynb?flush_cache=true)\n",
     "\n",
-    "This notebook frames the **Refresh / Content Opportunity Scoring** lane into a formal ML task specification: task type, observed target, success metrics, unit of analysis dataframe probe, and justification over fixed rules."
+    "This notebook frames the **Refresh / Content Opportunity Scoring** lane into a formal ML task specification: task type, observed target, success metrics, unit of analysis dataframe probe, target column sketch, and justification over fixed rules."
    ]
   },
   {
@@ -173,7 +173,7 @@ w02_notebook = {
    "source": [
     "## 1. My lane as an ML task (type)\n",
     "\n",
-    "**Selected Task Type:** **Ranking / Scoring** (Opportunity Priority Scoring)\n",
+    "**Selected Task Type:** **Ranking / Priority Scoring** (Opportunity Priority Scoring)\n",
     "\n",
     "**Why:** The primary decision requirement is to present content editors with a ranked queue of content items (ordered from highest opportunity / highest decay severity to lowest). Editors work from top to bottom. Ranking and continuous scoring reflect this operational decision workflow directly, unlike unranked binary classification."
    ]
@@ -246,7 +246,7 @@ w02_notebook = {
     "\n",
     "**Unit of Analysis:** One row = One pseudonymized content item (`content_id`) within a client context (`client_id`).\n",
     "\n",
-    "Loading the starter CSV slice to verify dataset grain and schema:"
+    "Loading the starter CSV slice, verifying grain, and sketching the target column (`target_click_decline_proxy`):"
    ]
   },
   {
@@ -274,10 +274,14 @@ w02_notebook = {
     "print(f\"Unique Content IDs: {unique_content:,}\")\n",
     "print(f\"Grain Verification (1 row = 1 content_id): {'PASSED' if is_unique else 'FAILED'}\")\n",
     "\n",
-    "# Display key feature slice\n",
-    "feature_cols = [\"content_id\", \"client_id\", \"impressions_90d\", \"clicks_90d\", \"content_age_days\", \"ctr\", \"avg_position\", \"engagement_rate\"]\n",
-    "print(\"\\nSample Dataframe Slice (Unit of Analysis):\")\n",
-    "print(df[feature_cols].head())\n"
+    "# Sketch the target column: observed click change from prev_30d to last_30d\n",
+    "df[\"target_click_decline_proxy\"] = df[\"clicks_prev_30d\"] - df[\"clicks_last_30d\"]\n",
+    "df[\"target_is_declining_observed\"] = (df[\"target_click_decline_proxy\"] > 0).astype(int)\n",
+    "\n",
+    "# Display key feature slice with target sketch\n",
+    "display_cols = [\"content_id\", \"client_id\", \"impressions_90d\", \"clicks_90d\", \"content_age_days\", \"ctr\", \"target_click_decline_proxy\", \"target_is_declining_observed\"]\n",
+    "print(\"\\nSample Dataframe Slice with Features + Sketched Target Column:\")\n",
+    "print(df[display_cols].head(10))\n"
    ]
   },
   {
