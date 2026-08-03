@@ -58,8 +58,17 @@ def run_notebook(notebook_path):
     print(f"Successfully executed and saved: {notebook_path}")
 
 if __name__ == "__main__":
-    run_notebook("work/notebooks/w01_research_question.ipynb")
-    run_notebook("work/notebooks/w02_ml_task_framing.ipynb")
-    run_notebook("work/notebooks/w03_data_contract.ipynb")
-    run_notebook("work/notebooks/w04_baseline_score.ipynb")
-    run_notebook("work/notebooks/capstone.ipynb")
+    notebooks = [
+        "work/notebooks/w01_research_question.ipynb",
+        "work/notebooks/w02_ml_task_framing.ipynb",
+        "work/notebooks/w03_data_contract.ipynb",
+        "work/notebooks/w03_feature_leakage_check.ipynb",
+        "work/notebooks/w04_baseline_score.ipynb",
+        "work/notebooks/w04_signal_audit.ipynb",
+        "work/notebooks/w05_model.ipynb",
+        "work/notebooks/w06_validation_audit.ipynb",
+        "work/notebooks/w07_action_playbook.ipynb",
+        "work/notebooks/capstone.ipynb"
+    ]
+    for nb_path in notebooks:
+        run_notebook(nb_path)
