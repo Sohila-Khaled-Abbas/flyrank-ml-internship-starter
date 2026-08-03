@@ -1,230 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sohila Khaled · Search Intelligence Portfolio</title>
-    <meta name="description" content="Portfolio of Sohila Khaled, Applied ML Intern & Search Intelligence Engineer specializing in leak-free content refresh opportunity scoring.">
+    <title>Sohila Khaled · Applied ML Intern & Search Intelligence Engineer</title>
+    <meta name="description" content="Portfolio of Sohila Khaled, Applied ML Intern & Search Intelligence Engineer at FlyRank AI. Specializing in leak-free ML, search intelligence, and BI analytics.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-canvas: #F8FAFC;
-            --text-main: #0F172A;
-            --text-muted: #475569;
-            --border-color: #E2E8F0;
-            --accent-sky: #0EA5E9;
-            --accent-light: #E0F2FE;
-            --font-heading: 'Outfit', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg-canvas);
-            color: var(--text-main);
-            font-family: var(--font-body);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 860px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 3rem;
-        }
-
-        .brand-monogram {
-            font-family: var(--font-heading);
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-main);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .brand-monogram span {
-            color: var(--accent-sky);
-        }
-
-        nav {
-            display: flex;
-            gap: 1.5rem;
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-        }
-
-        nav a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        nav a.active, nav a:hover {
-            color: var(--accent-sky);
-        }
-
-        .status-badge {
-            background-color: var(--accent-light);
-            color: var(--accent-sky);
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            padding: 0.35rem 0.75rem;
-            border-radius: 9999px;
-            border: 1px solid rgba(14, 165, 233, 0.3);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--accent-sky);
-            border-radius: 50%;
-        }
-
-        .hero {
-            margin-bottom: 4rem;
-        }
-
-        h1 {
-            font-family: var(--font-heading);
-            font-size: 2.75rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
-        }
-
-        .lead-claim {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 720px;
-            margin-bottom: 2rem;
-        }
-
-        .card {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
-
-        .card h2 {
-            font-family: var(--font-heading);
-            font-size: 1.35rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .card p {
-            color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .cta-group {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .cta-primary {
-            background-color: var(--accent-sky);
-            color: #FFFFFF;
-            font-family: var(--font-heading);
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-        }
-
-        .cta-secondary {
-            background-color: #F1F5F9;
-            color: var(--text-main);
-            font-family: var(--font-heading);
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            border: 1px solid var(--border-color);
-        }
-
-        footer {
-            border-top: 1px solid var(--border-color);
-            padding-top: 2rem;
-            text-align: center;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-    </style>
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
+    <!-- Site Navigation Header -->
+    <header class="site-header">
+        <div class="container header-inner">
             <a href="index.html" class="brand-monogram"><span>[</span> SK <span>]</span> Sohila Khaled</a>
-            <nav>
-                <a href="index.html" class="active">Home</a>
-                <a href="cases.html">Case Studies</a>
-                <a href="paper.html">Research Paper</a>
-                <a href="about.html">About</a>
-            </nav>
-        </header>
+            
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="about.html">About & CV</a></li>
+                <li><a href="dns-walkthrough.html">DNS Walkthrough (PF-04)</a></li>
+                <li><a href="paper.html">Research Paper</a></li>
+                <li><a href="cases.html">Case Studies</a></li>
+            </ul>
 
-        <main class="hero">
+            <div class="header-actions">
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">☀️ Light Mode</button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero container">
             <div class="status-badge">
                 <span class="status-dot"></span>
-                <span>LIVE & REASONED · WEEK 5 BUILD</span>
+                <span>FlyRank AI ML Intern · Cohort July 2026</span>
             </div>
 
-            <h1>Search Intelligence & Content Decay Prioritization</h1>
-            <p class="lead-claim">
-                I build leak-free machine learning systems that prioritize content refreshes, turning decaying organic search traffic into high-ROI editorial action.
+            <h1 class="hero-title">Sohila Khaled — Applied ML Intern & Search Intelligence Engineer</h1>
+            <p class="hero-subtitle">
+                Building end-to-end Machine Learning pipelines, agentic AI workflows, and analytics solutions that turn complex search and financial data into evidence-backed business action.
             </p>
 
-            <div class="card">
-                <h2>📊 Primary Research Deliverable</h2>
-                <p>
-                    Inspect our capstone research paper evaluating a Random Forest priority model across 30,000 anonymized URLs and 32 client domains, achieving a Precision@50 of 100.0% on unseen holdout clients.
-                </p>
-                <div class="cta-group">
-                    <a href="paper.html" class="cta-primary">Read Research Paper</a>
-                    <a href="cases.html" class="cta-secondary">View Framed Case Studies</a>
+            <div class="cta-group">
+                <a href="#projects" class="btn btn-primary">View Projects ↓</a>
+                <a href="dns-walkthrough.html" class="btn btn-secondary">DNS Walkthrough (PF-04)</a>
+                <a href="https://cal.com/sohila-khaled/15min" target="_blank" class="btn btn-outline">📅 Book 1-on-1</a>
+            </div>
+        </section>
+
+        <!-- Technical Expertise Section -->
+        <section class="section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Technical Expertise & Stack</h2>
+                    <p>Core competencies spanning machine learning, data engineering, and business intelligence architecture.</p>
+                </div>
+
+                <div class="skills-grid">
+                    <!-- Skill Card 1 -->
+                    <div class="skill-card">
+                        <h3>🤖 Machine Learning & AI</h3>
+                        <div class="badge-cloud">
+                            <span class="tech-badge">Python</span>
+                            <span class="tech-badge">PyTorch</span>
+                            <span class="tech-badge">Scikit-Learn</span>
+                            <span class="tech-badge">Transformers/LLMs</span>
+                            <span class="tech-badge">RAG Pipelines</span>
+                            <span class="tech-badge">LangChain</span>
+                            <span class="tech-badge">n8n Agent Workflows</span>
+                        </div>
+                    </div>
+
+                    <!-- Skill Card 2 -->
+                    <div class="skill-card">
+                        <h3>📊 Data Engineering & BI</h3>
+                        <div class="badge-cloud">
+                            <span class="tech-badge">SQL (PostgreSQL, T-SQL)</span>
+                            <span class="tech-badge">dbt</span>
+                            <span class="tech-badge">Databricks (Medallion)</span>
+                            <span class="tech-badge">Power BI (DAX / M)</span>
+                            <span class="tech-badge">ETL Pipelines</span>
+                            <span class="tech-badge">Streamlit</span>
+                        </div>
+                    </div>
+
+                    <!-- Skill Card 3 -->
+                    <div class="skill-card">
+                        <h3>☁️ Cloud & Infrastructure</h3>
+                        <div class="badge-cloud">
+                            <span class="tech-badge">Google Cloud Platform</span>
+                            <span class="tech-badge">BigQuery</span>
+                            <span class="tech-badge">Git / GitHub Actions</span>
+                            <span class="tech-badge">Docker</span>
+                            <span class="tech-badge">DuckDB</span>
+                            <span class="tech-badge">GitHub Pages / Netlify</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </main>
+        </section>
 
-        <footer>
-            <p>© 2026 Sohila Khaled · Applied ML Intern & Search Intelligence Engineer</p>
-        </footer>
-    </div>
+        <!-- Featured Projects Section -->
+        <section class="section-padding" id="projects">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Featured Projects & Research</h2>
+                    <p>Applied machine learning models, search intelligence engines, and data engineering systems.</p>
+                </div>
+
+                <div class="projects-grid">
+                    <!-- Project 1 -->
+                    <article class="project-card">
+                        <div>
+                            <span class="project-tag">FlyRank Capstone · Machine Learning</span>
+                            <h3>FlyRank Search Intelligence Engine</h3>
+                            <p>
+                                Leak-free Random Forest opportunity scoring model evaluated on 30,000 anonymized URLs across 32 clients. Achieved 100.0% Precision@50 on unseen holdout client domains.
+                            </p>
+                        </div>
+                        <div>
+                            <a href="paper.html" class="btn btn-secondary" style="width: 100%; justify-content: center;">Read Research Paper</a>
+                        </div>
+                    </article>
+
+                    <!-- Project 2 -->
+                    <article class="project-card">
+                        <div>
+                            <span class="project-tag">Data Engineering Utility</span>
+                            <h3>DeepClean OS</h3>
+                            <p>
+                                Automated data cleaning and quality engineering tool built with Python and Streamlit to detect schema drift, handle missingness, and auto-export clean datasets.
+                            </p>
+                        </div>
+                        <div>
+                            <a href="https://github.com/Sohila-Khaled-Abbas" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center;">View on GitHub</a>
+                        </div>
+                    </article>
+
+                    <!-- Project 3 -->
+                    <article class="project-card">
+                        <div>
+                            <span class="project-tag">Financial Analytics</span>
+                            <h3>AR Financial Tracking System</h3>
+                            <p>
+                                Accounts receivable lifecycle simulation processing high-volume transactions using Python, Parquet, Power Query, and Power BI dashboards with custom DAX aging measures.
+                            </p>
+                        </div>
+                        <div>
+                            <a href="https://github.com/Sohila-Khaled-Abbas" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center;">View Project</a>
+                        </div>
+                    </article>
+
+                    <!-- Project 4 -->
+                    <article class="project-card">
+                        <div>
+                            <span class="project-tag">Enterprise Data Warehouse</span>
+                            <h3>Global Horizon Bank EDW</h3>
+                            <p>
+                                Dimensional star schema data warehouse designed for high-performance financial risk analytics, automated ELT loading, and executive reporting.
+                            </p>
+                        </div>
+                        <div>
+                            <a href="https://github.com/Sohila-Khaled-Abbas" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center;">Explore Architecture</a>
+                        </div>
+                    </article>
+
+                    <!-- Project 5 -->
+                    <article class="project-card">
+                        <div>
+                            <span class="project-tag">Business Intelligence</span>
+                            <h3>Mobile Support Analytics Dashboard</h3>
+                            <p>
+                                Customer satisfaction (CSAT) and Average Handle Time (AHT) operational analytics platform built with Power BI and advanced DAX metrics.
+                            </p>
+                        </div>
+                        <div>
+                            <a href="https://github.com/Sohila-Khaled-Abbas" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center;">View Dashboard</a>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact & Connect Section -->
+        <section class="section-padding">
+            <div class="container" style="text-align: center;">
+                <div class="section-header">
+                    <h2>Connect & Collaborate</h2>
+                    <p>Interested in applied ML pipelines, search intelligence, or analytics engineering?</p>
+                </div>
+
+                <div class="cta-group" style="justify-content: center;">
+                    <a href="https://linkedin.com/in/sohila-khaled" target="_blank" class="btn btn-primary">Connect on LinkedIn</a>
+                    <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter" target="_blank" class="btn btn-secondary">GitHub Repository</a>
+                    <a href="https://cal.com/sohila-khaled/15min" target="_blank" class="btn btn-outline">📅 Book 15-Min Call</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2026 Sohila Khaled · Applied ML Intern & Search Intelligence Engineer at <a href="https://flyrank.ai" target="_blank">FlyRank AI</a></p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Handler -->
+    <script src="js/main.js"></script>
 </body>
 </html>

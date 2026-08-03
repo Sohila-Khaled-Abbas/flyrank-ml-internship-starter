@@ -1,75 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About & Bio · Sohila Khaled Portfolio</title>
-    <meta name="description" content="Bio and contact details for Sohila Khaled, Applied ML Intern & Search Intelligence Engineer.">
+    <title>About & CV · Sohila Khaled</title>
+    <meta name="description" content="Professional background, certifications, and educational leadership of Sohila Khaled, Applied ML Intern & Search Intelligence Engineer.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-canvas: #F8FAFC;
-            --text-main: #0F172A;
-            --text-muted: #475569;
-            --border-color: #E2E8F0;
-            --accent-sky: #0EA5E9;
-            --accent-light: #E0F2FE;
-            --font-heading: 'Outfit', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg-canvas); color: var(--text-main); font-family: var(--font-body); line-height: 1.6; padding: 2rem; min-height: 100vh; }
-        .container { max-width: 860px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2.5rem; }
-        .brand { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-main); text-decoration: none; }
-        .brand span { color: var(--accent-sky); }
-        nav { display: flex; gap: 1.5rem; font-family: var(--font-mono); font-size: 0.9rem; }
-        nav a { color: var(--text-muted); text-decoration: none; font-weight: 500; }
-        nav a.active, nav a:hover { color: var(--accent-sky); }
-
-        h1 { font-family: var(--font-heading); font-size: 2.25rem; margin-bottom: 1.5rem; }
-        .bio-card { background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); margin-bottom: 2rem; }
-        .bio-card p { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem; }
-        .cta-btn { display: inline-block; background-color: var(--accent-sky); color: #FFFFFF; font-family: var(--font-heading); font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
-        .cta-btn:hover { background-color: #0284C7; }
-    </style>
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <a href="index.html" class="brand"><span>[</span> SK <span>]</span> Sohila Khaled</a>
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="cases.html">Case Studies</a>
-                <a href="paper.html">Research Paper</a>
-                <a href="about.html" class="active">About</a>
-            </nav>
-        </header>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="brand-monogram"><span>[</span> SK <span>]</span> Sohila Khaled</a>
+            
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html" class="active">About & CV</a></li>
+                <li><a href="dns-walkthrough.html">DNS Walkthrough (PF-04)</a></li>
+                <li><a href="paper.html">Research Paper</a></li>
+                <li><a href="cases.html">Case Studies</a></li>
+            </ul>
 
-        <main>
-            <h1>About & Contact</h1>
+            <div class="header-actions">
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">☀️ Light Mode</button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">☰</button>
+            </div>
+        </div>
+    </header>
 
-            <div class="bio-card">
-                <p>
-                    I am an <strong>Applied ML Intern & Search Intelligence Engineer</strong> focused on building leak-free machine learning systems that replace editorial intuition with evidence-backed decision support.
-                </p>
-                <p>
-                    During the FlyRank ML Internship, I designed a content refresh priority scoring engine trained on 30,000 anonymized URLs across 32 clients. My work prioritizes data contracts, rigorous client-grouped validation, and open-source reproducibility.
-                </p>
-                <p>
-                    <strong>Voice Card:</strong> Direct, plain, data-first, warm, zero fluff.
-                </p>
+    <main class="container" style="padding-top: 3.5rem; padding-bottom: 4rem;">
+        <!-- Page Title -->
+        <div class="section-header">
+            <span class="project-tag">Professional Resume & Profile</span>
+            <h1 style="font-family: var(--font-heading); font-size: 2.5rem; margin-top: 0.5rem;">Sohila Khaled</h1>
+            <p>Applied ML Intern & Search Intelligence Engineer at FlyRank AI | Certified Data Analyst & BI Developer</p>
+        </div>
 
-                <div style="margin-top: 2rem;">
-                    <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter" target="_blank" class="cta-btn">View GitHub Repository</a>
+        <!-- Professional Overview Card -->
+        <section class="info-card" style="margin-bottom: 2.5rem; padding: 2rem;">
+            <h2 style="font-family: var(--font-heading); color: var(--accent-cyan); margin-bottom: 1rem;">Career Summary</h2>
+            <p style="color: var(--text-secondary); line-height: 1.7; font-size: 1.05rem;">
+                I am an <strong>Applied Machine Learning Fellow & Search Intelligence Engineer at FlyRank AI</strong> (July 2026 Cohort) with a strong foundation as an Analytics Engineer and Business Intelligence Developer. I specialize in engineering leak-free machine learning pipelines, building automated agentic AI workflows with n8n and MCP, and modeling high-dimensional search intelligence datasets.
+            </p>
+        </section>
+
+        <!-- Community Leadership -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-bottom: 1.5rem; color: var(--text-primary);">Community & Technical Leadership</h2>
+            
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <h3>🍵 Founder of "The Data Tea"</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        Founded an educational technology community dedicated to helping aspiring data professionals master SQL-driven analysis, practical Power BI solutions, and portfolio engineering.
+                    </p>
+                </div>
+
+                <div class="skill-card">
+                    <h3>🚀 Build with AI: Masr Edition</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        Participated in hands-on cloud AI deployment hackathons organized by the Information Technology Institute (ITI) and Google, building production ML pipelines on Google Cloud Platform.
+                    </p>
+                </div>
+
+                <div class="skill-card">
+                    <h3>🌟 Favikon Top 200 Creator</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        Recognized by Favikon as one of the Top 200 Arabic-Speaking Content Creators in Egypt for Data Science, Tech Education, and Analytics Engineering.
+                    </p>
                 </div>
             </div>
-        </main>
-    </div>
+        </section>
+
+        <!-- Certifications -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-bottom: 1.5rem; color: var(--text-primary);">Verified Certifications</h2>
+            
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <h3>📊 DataCamp Professional Certifications</h3>
+                    <div class="badge-cloud" style="margin-top: 0.75rem;">
+                        <span class="tech-badge">SQL Associate</span>
+                        <span class="tech-badge">Data Engineer Associate</span>
+                        <span class="tech-badge">Data Analyst Associate</span>
+                    </div>
+                </div>
+
+                <div class="skill-card">
+                    <h3>⚡ HackerRank Credentials</h3>
+                    <div class="badge-cloud" style="margin-top: 0.75rem;">
+                        <span class="tech-badge">SQL (Advanced)</span>
+                        <span class="tech-badge">Python (Basic)</span>
+                    </div>
+                </div>
+
+                <div class="skill-card">
+                    <h3>📈 Maven Analytics & n8n</h3>
+                    <div class="badge-cloud" style="margin-top: 0.75rem;">
+                        <span class="tech-badge">Power BI Desktop & Service</span>
+                        <span class="tech-badge">World-Class Portfolio Credentials</span>
+                        <span class="tech-badge">n8n Quickstart Certification</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download & Connect CTA -->
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="https://linkedin.com/in/sohila-khaled" target="_blank" class="btn btn-primary">Connect on LinkedIn</a>
+            <a href="https://cal.com/sohila-khaled/15min" target="_blank" class="btn btn-outline" style="margin-left: 1rem;">📅 Schedule Meeting</a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2026 Sohila Khaled · Applied ML Intern & Search Intelligence Engineer at <a href="https://flyrank.ai" target="_blank">FlyRank AI</a></p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PF-04 Deliverable: Personal Website & DNS Subdomain Walkthrough</title>
+    <meta name="description" content="PF-04 assignment deliverable: DNS Architecture Diagram, Plain-Language Walkthrough, and Capstone Provisioning Checklist for FlyRank subdomain.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Mermaid.js for Interactive Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <!-- Site Navigation Header -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="brand-monogram"><span>[</span> SK <span>]</span> Sohila Khaled</a>
+            
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About & CV</a></li>
+                <li><a href="dns-walkthrough.html" class="active">DNS Walkthrough (PF-04)</a></li>
+                <li><a href="paper.html">Research Paper</a></li>
+                <li><a href="cases.html">Case Studies</a></li>
+            </ul>
+
+            <div class="header-actions">
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">☀️ Light Mode</button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3.5rem; padding-bottom: 4rem;">
+        <!-- Page Header -->
+        <div class="section-header">
+            <span class="project-tag">Assignment Code: PF-04</span>
+            <h1 style="font-family: var(--font-heading); font-size: 2.3rem; margin-top: 0.5rem;">PF-04 Deliverable: Personal Website & DNS Subdomain Walkthrough</h1>
+            <p><strong>Author:</strong> Sohila Khaled (Applied ML Intern & Search Intelligence Engineer) | <strong>Track:</strong> General AI Fluency — Phase: Build (core)</p>
+        </div>
+
+        <!-- Section 1: Live Links Grid -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 1.25rem; color: var(--text-primary);">1. Verified Live Deliverable Links</h2>
+            <div class="dns-grid">
+                <div class="info-card">
+                    <span class="label">Live Public HTTPS URL</span>
+                    <a href="https://sohila-khaled-abbas.github.io/flyrank-ml-internship-starter/" target="_blank" class="value">sohila-khaled-abbas.github.io</a>
+                </div>
+                <div class="info-card">
+                    <span class="label">GitHub Repository</span>
+                    <a href="https://github.com/Sohila-Khaled-Abbas/flyrank-ml-internship-starter" target="_blank" class="value">flyrank-ml-internship-starter</a>
+                </div>
+                <div class="info-card">
+                    <span class="label">Target Custom Subdomain</span>
+                    <span class="value">sohilakhaled.flyrank.ai</span>
+                </div>
+                <div class="info-card">
+                    <span class="label">1-on-1 Booking Link</span>
+                    <a href="https://cal.com/sohila-khaled/15min" target="_blank" class="value">cal.com/sohila-khaled/15min</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Visual DNS Architecture Diagram -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 1.25rem; color: var(--text-primary);">2. Visual DNS Resolution Architecture Diagram</h2>
+            
+            <div class="mermaid-box">
+                <div class="mermaid">
+                flowchart TD
+                    User["1. User Types sohilakhaled.flyrank.ai"] --> Resolver["2. DNS Recursive Resolver (ISP / 8.8.8.8)"]
+                    Resolver --> AuthNS["3. FlyRank Authoritative Nameserver"]
+                    AuthNS -- "Returns CNAME: sohila-khaled-abbas.github.io" --> Resolver
+                    Resolver --> HostNS["4. GitHub Pages / Netlify Edge Server"]
+                    HostNS -- "Serves HTTPS Website + Padlock SSL" --> User
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Plain-Language DNS Walkthrough -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 1.25rem; color: var(--text-primary);">3. Plain-Language DNS Walkthrough</h2>
+            
+            <div class="info-card" style="margin-bottom: 1.5rem; padding: 1.75rem;">
+                <h3 style="font-family: var(--font-heading); color: var(--accent-cyan); margin-bottom: 0.75rem;">What is DNS?</h3>
+                <p style="color: var(--text-secondary); line-height: 1.7;">
+                    The <strong>Domain Name System (DNS)</strong> is the internet's phonebook. Computers communicate across networks using numerical IP addresses (such as <code>185.199.108.153</code>), whereas humans remember names (such as <code>flyrank.ai</code>). DNS translates human-readable domain names into computer-routable IP addresses.
+                </p>
+            </div>
+
+            <div class="skills-grid" style="margin-bottom: 1.5rem;">
+                <div class="skill-card">
+                    <h3>🔍 Recursive Resolver</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        The browser's digital courier (operated by ISPs or public resolvers like Google 8.8.8.8) that receives requests and searches internet nameservers to locate IP addresses.
+                    </p>
+                </div>
+                <div class="skill-card">
+                    <h3>🏛️ Authoritative Nameserver</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        The official master database holding verified DNS records for a domain (e.g. FlyRank's DNS servers).
+                    </p>
+                </div>
+                <div class="skill-card">
+                    <h3>📍 A Record vs CNAME Record</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        An <strong>A Record</strong> maps a hostname directly to an IPv4 address. A <strong>CNAME Record (Canonical Name)</strong> acts as an alias pointing one domain name to another domain name.
+                    </p>
+                </div>
+            </div>
+
+            <div class="info-card" style="padding: 1.75rem;">
+                <h3 style="font-family: var(--font-heading); color: var(--accent-cyan); margin-bottom: 0.75rem;">4-Step Execution Flow: What Happens When Someone Types Your Domain</h3>
+                <ol style="color: var(--text-secondary); padding-left: 1.25rem; line-height: 1.8;">
+                    <li><strong>Request Initiation:</strong> The user types <code>sohilakhaled.flyrank.ai</code> into their browser. The browser sends a query to the Recursive Resolver.</li>
+                    <li><strong>CNAME Lookup:</strong> The resolver asks FlyRank's Authoritative Nameserver, which returns the alias: <code>sohilakhaled.flyrank.ai ➔ sohila-khaled-abbas.github.io</code>.</li>
+                    <li><strong>Host Routing:</strong> The resolver follows the CNAME to GitHub Pages / Netlify edge servers, which identify the repository matching Sohila Khaled's site.</li>
+                    <li><strong>HTTPS SSL Handshake:</strong> The host negotiates an automated TLS/SSL certificate (via Let's Encrypt), encrypting traffic and rendering the green padlock icon in the browser.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Section 4: Capstone Subdomain Provisioning Checklist -->
+        <section style="margin-bottom: 3rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 1.25rem; color: var(--text-primary);">4. Capstone Subdomain Provisioning Checklist</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">Interactive checklist for provisioning <code>sohilakhaled.flyrank.ai</code> at capstone approval time (check state persists locally):</p>
+
+            <div class="checklist-box">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check-1">
+                    <div class="checklist-content">
+                        <label for="check-1">1. FlyRank Ops DNS Record Provisioning</label>
+                        <p>Ops creates DNS record: <code>sohilakhaled.flyrank.ai CNAME sohila-khaled-abbas.github.io</code></p>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check-2">
+                    <div class="checklist-content">
+                        <label for="check-2">2. Host Custom Domain Configuration</label>
+                        <p>In GitHub Pages / Netlify settings, add custom domain <code>sohilakhaled.flyrank.ai</code> and save CNAME file.</p>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check-3">
+                    <div class="checklist-content">
+                        <label for="check-3">3. Global DNS Propagation Verification</label>
+                        <p>Run terminal audit: <code>dig sohilakhaled.flyrank.ai CNAME</code> to verify global DNS resolution.</p>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check-4">
+                    <div class="checklist-content">
+                        <label for="check-4">4. HTTPS SSL Certificate & Padlock Audit</label>
+                        <p>Open <code>https://sohilakhaled.flyrank.ai</code> in a private window and verify active Let's Encrypt SSL padlock certificate.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2026 Sohila Khaled · Applied ML Intern & Search Intelligence Engineer at <a href="https://flyrank.ai" target="_blank">FlyRank AI</a></p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Handler -->
+    <script src="js/main.js"></script>
+</body>
+</html>
