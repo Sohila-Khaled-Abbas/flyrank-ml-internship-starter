@@ -115,7 +115,7 @@ The legacy snapshot model's feature list is documented in one place, but it is n
 
 # The full warehouse release (weeks 3+)
 
-The starter CSV above is a 30k-row teaching slice. The course materials describe a larger pseudonymized daily warehouse release hosted as gated Parquet. Access and availability must be verified independently; this repository does not bundle the daily warehouse records. A point-in-time rebuild requires that dated data and its access authorization.
+The starter CSV above is a 30k-row teaching slice. The project work also used the larger pseudonymized daily warehouse release (approximately 79 million rows), hosted as gated Parquet and queried with DuckDB. The larger release is not bundled in this public repository. This distinction matters: the 30k snapshot supports the historical starter experiment, while the dated daily warehouse is the relevant source for a point-in-time rebuild. Any renewed access or redistribution must follow the dataset provider's authorization terms.
 
 ## Tables
 
