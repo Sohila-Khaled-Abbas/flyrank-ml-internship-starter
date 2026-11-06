@@ -5,7 +5,7 @@
 [![FlyRank AI Verified](https://img.shields.io/badge/FlyRank_AI-Verified_Graduate-6366F1?style=flat-square)](https://aifluency.flyrank.ai/verify/sohilakhaled)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-Official portfolio, applied machine learning research paper, and autonomous decision-support agent for **Sohila Khaled Abbas** (Applied ML Intern & Search Intelligence Engineer at FlyRank AI | BI Developer).
+Official portfolio and applied machine-learning project by **Sohila Khaled Abbas** (Machine Learning Engineer Intern at FlyRank AI | BI Developer).
 
 ---
 
@@ -82,8 +82,8 @@ python -m venv venv
 pip install -r requirements.txt
 
 # 2. Run the end-to-end ML pipeline
-python scripts/03_train_model.py
-python scripts/04_evaluate_and_export.py
+python scripts/03_train_model.py --allow-exploratory-snapshot  # exploratory only; not temporal validation
+python scripts/04_evaluate_and_export.py  # exploratory outputs only until point-in-time data is implemented
 
 # 3. (Optional) Run n8n webhook workflow with Docker
 docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n:latest
