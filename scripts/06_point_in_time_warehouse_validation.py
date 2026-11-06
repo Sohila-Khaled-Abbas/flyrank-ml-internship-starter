@@ -54,8 +54,8 @@ def parse_args():
     p.add_argument("--decline-threshold", type=float, default=0.20)
     p.add_argument("--test-size", type=float, default=0.20)
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--memory-limit", default="6GB", help="DuckDB memory budget; leave headroom for Windows and Python.")
-    p.add_argument("--threads", type=int, default=4)
+    p.add_argument("--memory-limit", default="4GB", help="DuckDB memory budget; leave headroom for Windows and Python.")
+    p.add_argument("--threads", type=int, default=1)
     default_temp = Path("D:/duckdb_tmp/flyrank") if Path("D:/").exists() else ROOT / "work" / "duckdb_tmp"
     p.add_argument("--temp-dir", default=str(default_temp), help="DuckDB spill directory; prefer a drive with ample free space.")
     p.add_argument("--scratch-dir", default=None, help="Directory for the full local Parquet cohort; defaults to the report output directory.")
@@ -78,6 +78,21 @@ def cutoff_values(cutoffs=None):
     return values
 
 
+def monthly_fact_relation(start_date, end_date_exclusive) -> str:
+    """Build a Parquet file list for only the month partitions touched by a window."""
+    start_month = pd.Timestamp(start_date).to_period("M")
+    last_day = pd.Timestamp(end_date_exclusive) - pd.Timedelta(days=1)
+    end_month = last_day.to_period("M")
+    months = pd.period_range(start_month, end_month, freq="M")
+    paths = [
+        f"{REL}/fact_content_daily_performance/month={month}/data_0.parquet"
+        for month in months
+    ]
+    if not paths:
+        raise ValueError("The requested date window did not include any monthly partitions.")
+    return "read_parquet([" + ", ".join("'" + path + "'" for path in paths) + "])"
+
+
 def build_cohort_sql(
     min_impressions: int,
     min_days: int,
@@ -93,17 +108,19 @@ def build_cohort_sql(
             ("validation", VALIDATION_CUTOFFS),
             ("test", TEST_CUTOFFS),
         ):
-            rows.extend((d, split) for d in dates)
-    if not rows:
-        raise ValueError("At least one cutoff is required.")
+            rows.extend((date, split) for date in dates)
+    if len(rows) != 1:
+        raise ValueError("Build the warehouse cohort one cutoff at a time to bound aggregation memory.")
 
-    first_report_date = min(pd.Timestamp(date) for date, _ in rows) - pd.Timedelta(days=60)
-    end_report_date = max(pd.Timestamp(date) for date, _ in rows) + pd.Timedelta(days=30)
+    cutoff, split_name = rows[0]
+    cutoff_date = pd.Timestamp(cutoff).date()
+    window_start = cutoff_date - pd.Timedelta(days=60)
+    window_end = cutoff_date + pd.Timedelta(days=30)
 
-    # Explicit global bounds allow date pruning before joining daily rows to the cutoffs.
+    # Source grain is one row per report_date × client × content. COUNT(*) FILTER
+    # therefore counts observed daily rows without the expensive per-group DISTINCT state.
     return f"""
-    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(rows)}),
-    daily AS (
+    WITH daily AS (
         SELECT
             CAST(report_date AS DATE) AS report_date,
             client_hash_id,
@@ -113,65 +130,57 @@ def build_cohort_sql(
             NULLIF(gsc_avg_position, 0)::DOUBLE AS avg_position
         FROM {fact_relation}
         WHERE gsc_data_available IS TRUE
-          AND report_date >= DATE '{first_report_date:%Y-%m-%d}'
-          AND report_date < DATE '{end_report_date:%Y-%m-%d}'
+          AND report_date >= DATE '{window_start:%Y-%m-%d}'
+          AND report_date < DATE '{window_end:%Y-%m-%d}'
     ),
     cohort AS (
         SELECT
-            c.cutoff_date,
-            c.split_name,
-            d.client_hash_id,
-            d.content_hash_id,
-            SUM(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
-                      AND d.report_date < c.cutoff_date
-                     THEN d.impressions ELSE 0 END) AS prev_impressions,
-            SUM(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
-                      AND d.report_date < c.cutoff_date
-                     THEN d.clicks ELSE 0 END) AS prev_clicks,
-            SUM(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
-                      AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
-                     THEN d.impressions ELSE 0 END) AS older_impressions,
-            COUNT(DISTINCT CASE
-                WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
-                 AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
-                 AND d.impressions IS NOT NULL
-                THEN d.report_date END) AS observed_days_older30,
-            AVG(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
-                      AND d.report_date < c.cutoff_date
-                     THEN d.avg_position END) AS mean_position_prev30,
-            COUNT(DISTINCT CASE
-                WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
-                 AND d.report_date < c.cutoff_date
-                 AND d.impressions IS NOT NULL
-                THEN d.report_date END) AS observed_days_prev30,
-            SUM(CASE WHEN d.report_date >= c.cutoff_date
-                      AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
-                     THEN d.impressions ELSE 0 END) AS next_impressions,
-            COUNT(DISTINCT CASE
-                WHEN d.report_date >= c.cutoff_date
-                 AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
-                 AND d.impressions IS NOT NULL
-                THEN d.report_date END) AS observed_days_next30
-        FROM cutoffs c
-        JOIN daily d
-          ON d.report_date >= c.cutoff_date - INTERVAL 60 DAY
-         AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
-        GROUP BY 1, 2, 3, 4
+            DATE '{cutoff_date:%Y-%m-%d}' AS cutoff_date,
+            '{split_name}' AS split_name,
+            client_hash_id,
+            content_hash_id,
+            SUM(CASE WHEN report_date >= DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 30 DAY
+                      AND report_date < DATE '{cutoff_date:%Y-%m-%d}'
+                     THEN impressions ELSE 0 END) AS prev_impressions,
+            SUM(CASE WHEN report_date >= DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 30 DAY
+                      AND report_date < DATE '{cutoff_date:%Y-%m-%d}'
+                     THEN clicks ELSE 0 END) AS prev_clicks,
+            SUM(CASE WHEN report_date >= DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 60 DAY
+                      AND report_date < DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 30 DAY
+                     THEN impressions ELSE 0 END) AS older_impressions,
+            COUNT(*) FILTER (
+                WHERE report_date >= DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 60 DAY
+                  AND report_date < DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 30 DAY
+                  AND impressions IS NOT NULL
+            ) AS observed_days_older30,
+            AVG(avg_position) FILTER (
+                WHERE report_date >= DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 30 DAY
+                  AND report_date < DATE '{cutoff_date:%Y-%m-%d}'
+            ) AS mean_position_prev30,
+            COUNT(*) FILTER (
+                WHERE report_date >= DATE '{cutoff_date:%Y-%m-%d}' - INTERVAL 30 DAY
+                  AND report_date < DATE '{cutoff_date:%Y-%m-%d}'
+                  AND impressions IS NOT NULL
+            ) AS observed_days_prev30,
+            SUM(CASE WHEN report_date >= DATE '{cutoff_date:%Y-%m-%d}'
+                      AND report_date < DATE '{cutoff_date:%Y-%m-%d}' + INTERVAL 30 DAY
+                     THEN impressions ELSE 0 END) AS next_impressions,
+            COUNT(*) FILTER (
+                WHERE report_date >= DATE '{cutoff_date:%Y-%m-%d}'
+                  AND report_date < DATE '{cutoff_date:%Y-%m-%d}' + INTERVAL 30 DAY
+                  AND impressions IS NOT NULL
+            ) AS observed_days_next30
+        FROM daily
+        GROUP BY client_hash_id, content_hash_id
     )
     SELECT *,
-        CASE WHEN prev_impressions >= {min_impressions}
-                   AND observed_days_prev30 >= {min_days}
-                   AND observed_days_older30 >= {min_days}
-                   AND observed_days_next30 >= {min_days}
-             THEN CAST(next_impressions < prev_impressions * (1.0 - {decline_threshold}) AS INTEGER)
-             ELSE NULL END AS target_decline
+        CAST(next_impressions < prev_impressions * (1.0 - {decline_threshold}) AS INTEGER) AS target_decline
     FROM cohort
     WHERE prev_impressions >= {min_impressions}
       AND observed_days_prev30 >= {min_days}
       AND observed_days_older30 >= {min_days}
       AND observed_days_next30 >= {min_days}
     """
-
 
 def build_cohort(
     con,
@@ -332,23 +341,66 @@ def main():
         f"spill directory: {temp_dir}; scratch directory: {scratch_dir}"
     )
 
-    # Write the full eligible cohort to disk. DuckDB can spill intermediate aggregation
-    # state to temp_dir; Python never has to collect the complete cohort into RAM.
-    cohort_path = scratch_dir / "cohort_features_local.parquet"
-    cohort_sql = build_cohort_sql(
-        args.min_impressions,
-        args.min_observed_days,
-        args.decline_threshold,
+    # Process one monthly cutoff at a time. Each query reads only the relevant month
+    # partitions and builds one client-content aggregation, keeping peak hash state lower.
+    cohort_dir = scratch_dir / "cohort_features_parts"
+    cohort_dir.mkdir(parents=True, exist_ok=True)
+    for stale_part in cohort_dir.glob("cohort_cutoff_*.parquet"):
+        stale_part.unlink()
+
+    cutoff_schedule = [
+        (date, "train") for date in TRAIN_CUTOFFS
+    ] + [
+        (date, "validation") for date in VALIDATION_CUTOFFS
+    ] + [
+        (date, "test") for date in TEST_CUTOFFS
+    ]
+
+    print(
+        f"Building {len(cutoff_schedule)} cutoff cohorts sequentially "
+        "from only the required monthly Parquet partitions...",
+        flush=True,
     )
-    print("Building full point-in-time cohort and spilling intermediate work to disk...", flush=True)
-    con.execute(
-        f"COPY ({cohort_sql}) TO '{sql_path(cohort_path)}' (FORMAT PARQUET, COMPRESSION ZSTD)"
-    )
-    cohort_relation = f"read_parquet('{sql_path(cohort_path)}')"
+    for index, (cutoff, split_name) in enumerate(cutoff_schedule, start=1):
+        cutoff_date = pd.Timestamp(cutoff).date()
+        relation = monthly_fact_relation(
+            cutoff_date - pd.Timedelta(days=60),
+            cutoff_date + pd.Timedelta(days=30),
+        )
+        cohort_sql = build_cohort_sql(
+            args.min_impressions,
+            args.min_observed_days,
+            args.decline_threshold,
+            fact_relation=relation,
+            cutoffs=[(cutoff, split_name)],
+        )
+        part_path = cohort_dir / f"cohort_cutoff_{cutoff}_{split_name}.parquet"
+        print(
+            f"[{index}/{len(cutoff_schedule)}] {split_name}: cutoff {cutoff}; "
+            f"reading only its 90-day source window",
+            flush=True,
+        )
+        con.execute(
+            f"COPY ({cohort_sql}) TO '{sql_path(part_path)}' "
+            "(FORMAT PARQUET, COMPRESSION ZSTD)"
+        )
+        part_rows = int(
+            con.execute(
+                f"SELECT COUNT(*) FROM read_parquet('{sql_path(part_path)}')"
+            ).fetchone()[0]
+        )
+        print(f"    wrote {part_rows:,} eligible rows", flush=True)
+
+    cohort_pattern = cohort_dir / "cohort_cutoff_*.parquet"
+    cohort_relation = f"read_parquet('{sql_path(cohort_pattern)}')"
     cohort_rows = int(con.execute(f"SELECT COUNT(*) FROM {cohort_relation}").fetchone()[0])
     if cohort_rows == 0:
         raise RuntimeError("No eligible cohort rows returned. Check source schema and thresholds.")
-    print(f"Full local cohort written: {cohort_rows:,} rows -> {cohort_path}", flush=True)
+    print(
+        f"Full local cohort written: {cohort_rows:,} rows across {len(cutoff_schedule)} Parquet files "
+        f"-> {cohort_dir}",
+        flush=True,
+    )
 
     # Decide client holdout from the full cohort, not from the smaller model samples.
     client_frame = con.execute(
@@ -496,7 +548,7 @@ def main():
         "warehouse_min_date": str(bounds.iloc[0]["min_date"]),
         "warehouse_max_date": str(bounds.iloc[0]["max_date"]),
         "full_eligible_cohort_rows": cohort_rows,
-        "full_cohort_parquet": str(cohort_path),
+        "full_cohort_parquet_directory": str(cohort_dir),
         "feature_window": "30 calendar days immediately before cutoff; report_date < cutoff",
         "target_window": "30 calendar days beginning at cutoff; cutoff <= report_date < cutoff + 30 days",
         "target": f"next-30-day impressions decline greater than {args.decline_threshold:.0%} versus immediately preceding 30 days",
@@ -546,6 +598,7 @@ def main():
     }
     (OUT / "evaluation_summary.json").write_text(json.dumps(results, indent=2))
     print(json.dumps(results, indent=2))
+    print(f"Full cohort Parquet parts saved under: {cohort_dir}")
     print(f"Evaluation summary saved under: {OUT / 'evaluation_summary.json'}")
 
 
