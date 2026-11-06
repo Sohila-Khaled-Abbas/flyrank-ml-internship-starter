@@ -54,7 +54,7 @@ With the capstone deployed, the platform is ready for continuous expansion. Sche
 
 1. **Validation Design Is the Work**: An ML model is only as honest as its split design. Always enforce grouped entity splits and temporal isolation before looking at a single metric.
 2. **AI Fluency Is Judgment, Not Generation**: Anyone can generate a hundred lines of code or fifty images in minutes. The differentiator is the engineering taste to reject forty-nine, verify the edge cases of the remaining one, and document the limitations honestly.
-3. **Receipts Beat Claims Every Time**: Never write "our algorithm revolutionized search." Write *"the model achieved 100.0% Precision@50 across 7 unseen client holdout domains ($n=6,000$), providing a +77.3 percentage point lift over base rate."* Precision in language reflects precision in engineering.
+3. **Receipts Beat Claims Every Time**: Never write "our algorithm revolutionized search." Write what the evidence supports, state the validation boundary, and omit unverified performance metrics. Precision in language reflects precision in engineering.
 
 You didn't study your way through this track; you built your way through. When anyone asks if you can ship real ML and data engineering systems with AI, don't argue—just send the link.
 
@@ -86,10 +86,10 @@ Over the past 10 weeks, I built and deployed an end-to-end decision-support engi
 Here is the honest story of what I built, one real design decision, and one real limitation:
 
 🛠️ WHAT I BUILT:
-A leak-free Random Forest opportunity scoring engine evaluated on 30,000 anonymized URLs across 32 client domains. It automates weekly refresh queues, achieving 100.0% Precision@50 and 0.9659 ROC-AUC on completely unseen holdout client domains (+77.3 pp lift over random selection).
+An exploratory Random Forest opportunity-scoring prototype built from a 30,000-row anonymized snapshot. Its feature and target windows overlap, so the old metrics are withdrawn pending a point-in-time rebuild.
 
 💡 ONE KEY DESIGN DECISION:
-Instead of a naive row-level random train/test split (which causes severe cross-client domain memorization and fake 99% accuracy), I implemented a strict Grouped Client Holdout Split (80% train on 25 clients / 20% test on 7 clients) with programmatic temporal leakage assertions blocking target-derived features.
+Instead of a naive row-level random train/test split (which causes severe cross-client domain memorization and fake 99% accuracy), I implemented a strict Grouped Client Holdout Split (80% train on 25 clients / 20% test on 7 clients) with data-contract and leakage-audit checks blocking target-derived features.
 
 ⚠️ ONE REAL LIMITATION:
 The model provides directional decision-support ranking, not causal guarantees. Furthermore, URLs with missing historical rank markers (avg_position = 0) are imputed with a proxy position of 50.0.

@@ -44,6 +44,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--baseline", default=str(BASELINE_PATH))
     parser.add_argument("--predictions", default=str(PREDICTION_PATH))
     parser.add_argument("--results", default=str(RESULT_PATH))
+    parser.add_argument(
+        "--allow-exploratory-snapshot",
+        action="store_true",
+        help="Explicitly allow the known-overlapping snapshot experiment. Outputs are exploratory only, not temporally validated.",
+    )
     return parser.parse_args()
 
 
@@ -207,6 +212,15 @@ def top_feature_importance(
 def main() -> None:
     args = parse_args()
 
+    if not args.allow_exploratory_snapshot:
+        raise SystemExit(
+            "Blocked: the bundled snapshot has overlapping feature and target windows. "
+            "A client-grouped split does not prevent temporal leakage. Rebuild point-in-time "
+            "features and a forward label from dated daily data first. For historical exploration "
+            "only, pass --allow-exploratory-snapshot; resulting metrics must not be reported "
+            "as validated predictive performance."
+        )
+
     frame = pd.read_csv(args.features)
     baseline_frame = pd.read_csv(args.baseline)
     if frame.empty:
@@ -269,6 +283,8 @@ def main() -> None:
 
     best_full_model = full_data_models[best_model_name]
     results_payload = {
+        "evaluation_status": "exploratory_snapshot_only_not_temporally_validated",
+        "validation_warning": "Snapshot feature aggregates overlap the recent-period target window. Client grouping does not resolve temporal leakage. Do not cite these metrics as prospective model performance.",
         "input_rows": int(len(frame)),
         "train_rows": int(len(train_indices)),
         "test_rows": int(len(test_indices)),
@@ -290,6 +306,7 @@ def main() -> None:
     }
     write_json(Path(args.results), results_payload)
 
+    print("WARNING: exploratory snapshot run only; metrics are not temporally validated.")
     print(f"Trained {len(model_results)} models on {len(frame):,} rows")
     print(f"Split strategy: {split_strategy}")
     print(f"Best model: {best_model_name}")

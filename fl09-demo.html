@@ -144,9 +144,9 @@
                     MCP --> Data["3. read_file('data/raw/content_refresh_anonymized.csv')"]
                     MCP --> n8n["4. Webhook Trigger to Self-Hosted Docker n8n"]
                     n8n --> Script["5. Execute scripts/n8n_pipeline_handler.py"]
-                    Script --> Guard["6. Data Contract & Temporal Leakage Assertion"]
+                    Script --> Guard["6. Data Contract & Historical target-column exclusion check"]
                     Guard --> Train["7. Train Random Forest on 25 Clients (80%)"]
-                    Train --> Eval["8. Evaluate Precision@50 on 7 Holdout Clients (20%)"]
+                    Train --> Eval["8. Historical snapshot evaluation (not temporally validated)"]
                     Eval --> Export["9. Export work/outputs/n8n_top50_recommendations.csv"]
                 </div>
             </div>
@@ -219,16 +219,16 @@ pip install pandas numpy scikit-learn python-docx</pre>
             <!-- Metrics Cards Row -->
             <div class="metrics-row">
                 <div class="metric-stat-card">
-                    <span class="num">100.0%</span>
-                    <span class="label">Holdout Precision@50</span>
+                    <span class="num">Withdrawn</span>
+                    <span class="label">Historical Precision@50 — withdrawn</span>
                 </div>
                 <div class="metric-stat-card">
-                    <span class="num">100.0%</span>
-                    <span class="label">Holdout Precision@100</span>
+                    <span class="num">Withdrawn</span>
+                    <span class="label">Historical Precision@100 — withdrawn</span>
                 </div>
                 <div class="metric-stat-card">
-                    <span class="num">0.9659</span>
-                    <span class="label">Holdout ROC-AUC Score</span>
+                    <span class="num">Withdrawn</span>
+                    <span class="label">Historical ROC-AUC — withdrawn</span>
                 </div>
                 <div class="metric-stat-card">
                     <span class="num">7 Clients</span>
@@ -239,7 +239,7 @@ pip install pandas numpy scikit-learn python-docx</pre>
             <div class="info-card" style="padding: 1.75rem;">
                 <h3 style="font-family: var(--font-heading); color: var(--accent-cyan); margin-bottom: 0.75rem;">Enforced Safety Guardrails & Limitations</h3>
                 <ul style="color: var(--text-secondary); padding-left: 1.25rem; line-height: 1.8;">
-                    <li>🔒 <strong>Temporal Data Leakage Prevention:</strong> Target-derived fields (<code>trend_direction</code>, <code>trend_pct</code>, <code>is_declining_label</code>) are programmatically blocked from model feature matrices via hardcoded code assertions.</li>
+                    <li>🔒 <strong>Temporal feature audit — incomplete:</strong> Explicit target-derived fields are excluded, but the snapshot's remaining 90-day aggregates overlap the target period. This is not a complete temporal-leakage safeguard; predictive metrics are withdrawn pending point-in-time validation.</li>
                     <li>⏸️ <strong>Confirmation Pause Guardrail:</strong> The agent is restricted from running automated <code>git push origin main</code> or file overwrites without explicit user confirmation.</li>
                     <li>📍 <strong>Missing Rank Marker Imputation:</strong> Pages with missing search rank markers (<code>avg_position = 0</code>) are imputed to a default proxy position of <code>50.0</code>.</li>
                 </ul>

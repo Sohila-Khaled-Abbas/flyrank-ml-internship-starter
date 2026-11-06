@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictive Search Intelligence: Leak-Free ML for Content Decay Prioritization · Research Paper</title>
-    <meta name="description" content="A leak-free machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery built on the FlyRank Search Intelligence dataset.">
+    <title>Predictive Search Intelligence: Temporal Validation Audit for Content Decay Prioritization · Research Paper</title>
+    <meta name="description" content="A snapshot machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery built on the FlyRank Search Intelligence dataset.">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- Open Graph / Social Share Meta Tags -->
     <meta property="og:type" content="article">
-    <meta property="og:title" content="Predictive Search Intelligence: Leak-Free ML for Content Decay Prioritization">
-    <meta property="og:description" content="A leak-free machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery built on the FlyRank Search Intelligence dataset.">
+    <meta property="og:title" content="Predictive Search Intelligence: Temporal Validation Audit for Content Decay Prioritization">
+    <meta property="og:description" content="A snapshot machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery built on the FlyRank Search Intelligence dataset.">
     <meta property="og:url" content="https://sohila-khaled-abbas.github.io/flyrank-ml-internship-starter/paper.html">
     <meta property="og:image" content="https://sohila-khaled-abbas.github.io/flyrank-ml-internship-starter/fl09_agent_demo_video_banner_1785791702836.png">
     <meta property="og:site_name" content="Sohila Khaled Abbas Portfolio">
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Predictive Search Intelligence Research Paper">
-    <meta name="twitter:description" content="A leak-free machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery.">
+    <meta name="twitter:description" content="A snapshot machine learning priority scoring pipeline for content decay prioritization and organic traffic recovery.">
     <meta name="twitter:image" content="https://sohila-khaled-abbas.github.io/flyrank-ml-internship-starter/fl09_agent_demo_video_banner_1785791702836.png">
     <!-- Privacy-Friendly Web Analytics & Visitor Telemetry -->
     <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "flyrank-portfolio-analytics-sohila"}'></script>
@@ -225,7 +225,7 @@
         <!-- HEADER -->
         <header class="paper-header">
             <span class="journal-tag">Applied Search Intelligence · Research Paper</span>
-            <h1>Predictive Search Intelligence: Leak-Free Machine Learning for Content Decay Prioritization</h1>
+            <h1>Predictive Search Intelligence: Temporal Validation Audit for Content Decay Prioritization</h1>
             <div class="author-block">
                 <span class="author-name">Sohila Khaled Abbas</span>
                 <span>Applied ML Intern & Search Intelligence Engineer</span>
@@ -234,12 +234,7 @@
         </header>
 
         <!-- ABSTRACT -->
-        <div class="abstract-box">
-            <h3>Abstract</h3>
-            <p>
-                Content decay and organic search traffic loss affect over half of published digital content (54.2% of pages in our dataset show a <code>down</code> performance trend), creating severe resource allocation bottlenecks for editorial teams. Traditional rule-based heuristics waste editorial hours on low-traffic URLs while failing to identify high-impact decaying pages in active decline. We construct a leak-free machine learning priority scoring pipeline using 30,000 anonymized content items across 32 clients from the FlyRank Search Intelligence dataset. Using strict temporal window isolation, our Random Forest classifier achieves a Precision@50 of 100.0% on top-ranked candidates, outperforming baseline heuristic rules and eliminating false-positive wasted effort. The resulting open-source decision-support engine provides content teams with an auditable, evidence-backed action playbook to maximize organic search traffic recovery.
-            </p>
-        </div>
+        <div class="abstract-box"><h3>Validation status — not validated</h3><p>This page documents an exploratory 30,000-row snapshot experiment. The target is derived from the most recent 30-day trend, while the available 90-day aggregate features include that same period. Excluding target-derived columns and splitting clients into separate groups does not remove this temporal overlap. Previously published Precision@K and ROC-AUC figures are withdrawn as predictive-performance claims. No replacement metrics are published. A valid evaluation requires point-in-time features built strictly before a prediction cutoff and a forward outcome window built strictly after it, using dated daily warehouse records.</p></div>
 
         <!-- 1. INTRODUCTION -->
         <section class="paper-section">
@@ -273,9 +268,9 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Approved Features</strong></td>
+                            <td><strong>Historical snapshot features</strong></td>
                             <td><code>impressions_90d</code>, <code>clicks_prev_30d</code>, <code>avg_position</code>, <code>content_age_days</code>, <code>ctr</code></td>
-                            <td><span class="metric-highlight">LEAK-FREE</span> (Measured prior to outcome window)</td>
+                            <td><span class="metric-highlight">NOT ESTABLISHED — overlapping snapshot window</span></td>
                         </tr>
                         <tr>
                             <td><strong>Outcome Proxy Target</strong></td>
@@ -296,53 +291,15 @@
         <section class="paper-section">
             <h2>3. Methodology & Client-Grouped Holdout Split</h2>
             <p>
-                To prevent client-domain contamination, we split the 32 clients into an 80% training set (25 clients) and a <strong>20% client-holdout test set (7 clients)</strong>. Models were evaluated using Precision@K ($\text{Precision}@50, \text{Precision}@100$) and ROC-AUC on completely unseen client domains.
+                To prevent client-domain contamination, we split the 32 clients into an 80% training set (25 clients) and a <strong>20% client-holdout test set (7 clients)</strong>. Models were evaluated using Precision@K ($\text{Precision}@50, \text{Precision}@100$) and ROC-AUC on client-grouped split (which does not resolve temporal leakage).
             </p>
             <p>
-                We benchmarked a hand-written 0–100 baseline rule against a Random Forest classifier trained on 5 leak-free features.
+                The historical experiment compared a hand-written rule baseline with a Random Forest. This comparison is exploratory only because the available snapshot features overlap the target period.
             </p>
         </section>
 
         <!-- 4. RESULTS -->
-        <section class="paper-section">
-            <h2>4. Experimental Results</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Model / Pipeline Stage</th>
-                            <th>Precision@50</th>
-                            <th>Precision@100</th>
-                            <th>ROC-AUC</th>
-                            <th>Lift over Base Rate</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Random Pick (Base Rate)</td>
-                            <td>22.7%</td>
-                            <td>22.7%</td>
-                            <td>0.5000</td>
-                            <td>+0.0 pp</td>
-                        </tr>
-                        <tr>
-                            <td>Hand-Written Rule Baseline</td>
-                            <td>100.0%</td>
-                            <td>100.0%</td>
-                            <td>N/A</td>
-                            <td>+77.3 pp</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Random Forest Model (Holdout)</strong></td>
-                            <td><span class="metric-highlight">100.0%</span></td>
-                            <td><span class="metric-highlight">98.0%</span></td>
-                            <td><span class="metric-highlight">0.9659</span></td>
-                            <td><span class="metric-highlight">+77.3 pp</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        <section class="paper-section"><h2>4. Experimental Results — Withdrawn</h2><p>The original snapshot metrics are not valid evidence of prospective model performance and are intentionally not reproduced here. The feature aggregates overlap the target observation period. Client-grouped splitting prevents client overlap but does not establish temporal isolation.</p><p><strong>Current status:</strong> exploratory snapshot results only; no validated performance metrics. See <a href="docs/temporal-validation-remediation.md">the temporal validation remediation plan</a>.</p></section>
 
         <!-- 5. LIMITATIONS -->
         <section class="paper-section">
@@ -354,49 +311,10 @@
             </ul>
         </section>
 
-        <!-- 6. RANKED ACTION PLAYBOOK -->
+        <!-- 6. HISTORICAL ACTION PLAYBOOK -->
         <section class="paper-section">
-            <h2>6. Ranked Action Playbook</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Content ID</th>
-                            <th>Client ID</th>
-                            <th>Priority Score</th>
-                            <th>Traffic Drop</th>
-                            <th>Recommended Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td><code>content_304f48230142</code></td>
-                            <td><code>client_f369cb89fc</code></td>
-                            <td class="metric-highlight">0.985</td>
-                            <td>124 clicks</td>
-                            <td>REFRESH_AND_EXPAND_CONTENT</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td><code>content_9aa793d4d895</code></td>
-                            <td><code>client_7f2253d7e2</code></td>
-                            <td class="metric-highlight">0.962</td>
-                            <td>98 clicks</td>
-                            <td>REFRESH_AND_EXPAND_CONTENT</td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td><code>content_5e6c160719bc</code></td>
-                            <td><code>client_3fdba35f04</code></td>
-                            <td class="metric-highlight">0.941</td>
-                            <td>42 clicks</td>
-                            <td>OPTIMIZE_TITLE_AND_METAS</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <h2>6. Historical Action Playbook — Illustrative Only</h2>
+            <p>The original queue preview is retained as an example of the intended decision-support output, not as a validated model recommendation. Scores and ranks were produced from the temporally overlapping snapshot experiment and must not be interpreted as reliable predictions.</p>
         </section>
 
         <!-- 7. REPRODUCIBILITY -->
