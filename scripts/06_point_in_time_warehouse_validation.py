@@ -122,13 +122,14 @@ def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: fl
                 THEN d.report_date END) AS observed_days_next30
         FROM cutoffs c
         JOIN daily d
-          ON d.report_date >= c.cutoff_date - INTERVAL 30 DAY
+          ON d.report_date >= c.cutoff_date - INTERVAL 60 DAY
          AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
         GROUP BY 1, 2, 3, 4
     )
     SELECT *,
         CASE WHEN prev_impressions >= {min_impressions}
                    AND observed_days_prev30 >= {min_days}
+                   AND observed_days_older30 >= {min_days}
                    AND observed_days_next30 >= {min_days}
              THEN CAST(next_impressions < prev_impressions * (1.0 - {decline_threshold}) AS INTEGER)
              ELSE NULL END AS target_decline
