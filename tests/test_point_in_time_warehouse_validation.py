@@ -101,6 +101,32 @@ class PointInTimeCohortTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.build(min_days=30, missing_recent_day=True)
 
+    def test_model_sample_is_bounded_and_retains_both_training_classes(self):
+        self.con.execute(
+            """
+            CREATE OR REPLACE TEMP VIEW cohort_with_group AS
+            SELECT
+                CAST(i % 2 AS INTEGER) AS target_decline,
+                'client_' || CAST(i % 25 AS VARCHAR) AS client_hash_id,
+                'content_' || CAST(i AS VARCHAR) AS content_hash_id,
+                DATE '2026-06-01' AS cutoff_date,
+                1000.0 AS prev_impressions,
+                500.0 AS prev_clicks,
+                900.0 AS older_impressions,
+                8.0 AS mean_position_prev30,
+                30 AS observed_days_prev30
+            FROM range(2000) AS t(i)
+            """
+        )
+        frame, metadata = MODULE.fetch_model_sample(
+            self.con, "TRUE", max_rows=100, stratified=True
+        )
+        self.assertLess(len(frame), 2000)
+        self.assertGreater(len(frame), 50)
+        self.assertEqual(frame["target_decline"].nunique(), 2)
+        self.assertTrue(metadata["sampled"])
+        self.assertEqual(metadata["available_rows"], 2000)
+
 
 if __name__ == "__main__":
     unittest.main()
