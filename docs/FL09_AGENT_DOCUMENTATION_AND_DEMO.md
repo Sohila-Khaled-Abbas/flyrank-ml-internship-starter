@@ -106,7 +106,7 @@ python scripts/n8n_pipeline_handler.py
   - Precision@50: WITHDRAWN
   - Precision@100: WITHDRAWN
   - Holdout ROC-AUC: WITHDRAWN
-  - Lift over Random Base Rate: +77.3 percentage points
+  - Lift over Random Base Rate: WITHDRAWN
 [Export Receipt] Generated 'work/outputs/n8n_top50_recommendations.csv' (50 prioritized actions).
 ```
 
@@ -173,4 +173,4 @@ TIMESTAMPS:
 
 ## Validation status correction
 
-The original snapshot features overlap the recent-period target window. Client grouping and exclusion of explicit target-derived columns do not establish point-in-time validity. All previously published Precision@K and ROC-AUC metrics are withdrawn. See [the remediation plan](temporal-validation-remediation.md). The n8n integration demonstrates workflow orchestration only; it does not make the model's predictions validated.
+The original snapshot features overlap the recent-period target window. Client grouping and exclusion of explicit target-derived columns do not establish point-in-time validity. All previously published Precision@K, ROC-AUC, lift, and operational-cost metrics are withdrawn. See [the remediation plan](temporal-validation-remediation.md). The n8n integration demonstrates workflow orchestration only; it does not make the model's predictions validated.
