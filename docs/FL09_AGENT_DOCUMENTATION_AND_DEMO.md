@@ -119,17 +119,14 @@ python scripts/n8n_pipeline_handler.py
 
 ---
 
-## 📈 5. Evaluation Results (Holdout Client Validation)
+## 📈 5. Evaluation Status — Withdrawn
 
-| Evaluation Metric | Baseline Random Pick | Hand-Written Rule | **Random Forest ML (Holdout)** | Lift vs Base Rate |
-|---|---|---|---|---|
-| **Precision@50** | 22.7% | WITHDRAWN | **WITHDRAWN** | **+77.3 pp** |
-| **Precision@100** | 22.7% | WITHDRAWN | **WITHDRAWN** | **+75.3 pp** |
-| **Holdout ROC-AUC** | 0.5000 | N/A | **WITHDRAWN** | **+0.4659** |
-| **False-Positive Rewrite Cost** | ~4.0 hrs/post | 0.0 hrs | **0.0 hrs** | **100% Waste Reduction** |
+The previously published Precision@K, ROC-AUC, lift, and false-positive-cost figures are withdrawn. The snapshot features overlap the target period, so the original evaluation is not a valid prospective test. Do not use the historical figures in presentations or applications.
+
+No replacement metrics are available. A point-in-time rebuild from dated daily warehouse records is required before reporting model performance. See [the temporal validation remediation plan](temporal-validation-remediation.md).
 
 ---
-
+ 
 ## ⚠️ 6. Limitations & Honest Scope
 
 1. **Decision-Support Scope (No Causal Guarantees)**:
@@ -170,7 +167,7 @@ TIMESTAMPS:
 
 ## 🤖 8. Transparency Diligence (AI Fluency Framework)
 
-> *"I built the n8n webhook automation workflow, script boilerplate, and initial data contract asserts using Claude Code. I independently audited and verified the temporal leakage exclusion logic, implemented the grouped client holdout split mathematics, verified ROC-AUC calculations against raw CSV ground truth, and recorded the unscripted live demo walkthrough."*  
+> *"I built the n8n webhook automation workflow, script boilerplate, and initial data contract asserts using Claude Code. I reviewed the original data-preparation and client-grouped experiment, identified the temporal-window limitation, and documented the validation remediation required before performance claims can be restored."*  
 > — **Sohila Khaled Abbas**
 
 
