@@ -101,6 +101,33 @@ class PointInTimeCohortTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.build(min_days=30, missing_recent_day=True)
 
+    def test_cutoff_query_uses_single_window_and_no_distinct_day_aggregate(self):
+        sql = MODULE.build_cohort_sql(
+            min_impressions=100,
+            min_days=20,
+            decline_threshold=0.20,
+            fact_relation="synthetic_fact",
+            cutoffs=[("2026-06-01", "test")],
+        )
+        self.assertIn("GROUP BY client_hash_id, content_hash_id", sql)
+        self.assertIn("COUNT(*) FILTER", sql)
+        self.assertNotIn("COUNT(DISTINCT", sql)
+        with self.assertRaises(ValueError):
+            MODULE.build_cohort_sql(
+                100,
+                20,
+                0.20,
+                fact_relation="synthetic_fact",
+                cutoffs=[("2026-05-01", "train"), ("2026-06-01", "test")],
+            )
+
+    def test_month_partition_relation_includes_only_touched_months(self):
+        relation = MODULE.monthly_fact_relation("2025-05-15", "2025-08-01")
+        self.assertIn("month=2025-05/data_0.parquet", relation)
+        self.assertIn("month=2025-06/data_0.parquet", relation)
+        self.assertIn("month=2025-07/data_0.parquet", relation)
+        self.assertNotIn("month=2025-08/data_0.parquet", relation)
+
     def test_model_sample_is_bounded_and_retains_both_training_classes(self):
         self.con.execute(
             """
