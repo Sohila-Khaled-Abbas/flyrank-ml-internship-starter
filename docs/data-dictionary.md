@@ -4,13 +4,11 @@ One row per content item (page): **30,000 rows × 44 columns**, covering **32 ps
 clients**. All metrics are aggregated over a trailing 90-day window ending at export time.
 Keep this file open while you work.
 
-## Read this first — the three rules that prevent 90% of mistakes
+## Read this first — snapshot limitations and target definition
 
 1. **Rate columns are ×100 percentages.** `ctr = 0.76` means **0.76%**, not 76%. Applies to
    `ctr`, `engagement_rate`, `scroll_rate`, `ai_traffic_pct`, `trend_pct`.
-2. **The label comes from `trend_direction`.** The pipeline defines
-   `is_declining_label = (trend_direction == "down")`, so `trend_direction` and `trend_pct`
-   must **never** be model features — that's the leakage notebook 02 demonstrates.
+2. **The label comes from `trend_direction`, but the snapshot is not point-in-time safe.** The target is derived from the most recent 30-day impressions compared with the preceding 30 days. The 90-day aggregates and derived rates include the target's recent period. Excluding the target columns alone does not prevent temporal leakage. Do not treat the snapshot experiment as a prospective evaluation.
 3. **IDs are for grouping only.** `content_id` / `client_id` are pseudonyms: use them for
    joins and grouped train/test splits, never as features.
 
@@ -110,16 +108,14 @@ Keep this file open while you work.
 | `has_ai_sessions` | 1 when `ai_sessions_90d > 0` |
 | `measurable_opportunity` | 1 when `impressions_90d ≥ 100` and `sessions_90d > 0` |
 
-Which of the 52 columns the models actually use is defined in one place:
+The legacy snapshot model's feature list is documented in one place, but it is not approved for prospective evaluation. See [the temporal validation remediation plan](temporal-validation-remediation.md). The feature list is defined in one place:
 `MODEL_NUMERIC_FEATURES` and `MODEL_CATEGORICAL_FEATURES` in `scripts/ml_utils.py`.
 
 ---
 
 # The full warehouse release (weeks 3+)
 
-The starter CSV above is a 30k-row teaching slice. Lane and capstone work run on the **full
-pseudonymized warehouse release** — ~79M rows of daily search performance hosted as Parquet on
-Hugging Face (gated; notebook 03 walks through access and the DuckDB workflow).
+The starter CSV above is a 30k-row teaching slice. The course materials describe a larger pseudonymized daily warehouse release hosted as gated Parquet. Access and availability must be verified independently; this repository does not bundle the daily warehouse records. A point-in-time rebuild requires that dated data and its access authorization.
 
 ## Tables
 
@@ -159,3 +155,8 @@ Hugging Face (gated; notebook 03 walks through access and the DuckDB workflow).
    `content_total_impressions_90d` as the query table's own denominator. Grain guard: the
    per-content context columns repeat on every row of that content item — `ANY_VALUE()` them,
    never `SUM()`.
+
+
+## Current evaluation status
+
+The existing snapshot dataset is suitable for data-contract exploration and workflow prototyping, but not for a leakage-safe prospective model evaluation. Its recent-period label overlaps the documented 90-day activity aggregates. Client-grouped splitting does not resolve this. All previously published snapshot metrics are withdrawn pending a dated point-in-time rebuild. See [temporal-validation-remediation.md](temporal-validation-remediation.md).
