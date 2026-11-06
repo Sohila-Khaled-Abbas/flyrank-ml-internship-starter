@@ -54,6 +54,7 @@ class PointInTimeCohortTests(unittest.TestCase):
         self.con.close()
 
     def register_frame(self, frame: pd.DataFrame, table_name: str):
+        self.con.execute(f"DROP TABLE IF EXISTS {table_name}")
         self.con.register("test_input_frame", frame)
         self.con.execute(f"CREATE TABLE {table_name} AS SELECT * FROM test_input_frame")
         self.con.unregister("test_input_frame")
