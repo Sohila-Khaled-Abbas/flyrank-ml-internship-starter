@@ -28,24 +28,30 @@ The client split is deterministic. The final score is therefore both forward in 
 
 ## Run locally (Windows PowerShell)
 
+The default configuration is intended for a 16 GB Windows machine: DuckDB is capped at 6 GB, uses four threads, and spills intermediate work to disk. Keep the spill and scratch locations on a drive with ample free space.
+
 ```powershell
 cd path\to\flyrank-ml-internship-starter
-python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:HF_TOKEN = Read-Host "Paste Hugging Face READ token"
-python scripts/06_point_in_time_warehouse_validation.py
-Remove-Item Env:HF_TOKEN
+python -m pip install -r requirements.txt
+
+New-Item -ItemType Directory -Force "D:\duckdb_tmp\flyrank","D:\flyrank_warehouse_work" | Out-Null
+python scripts/06_point_in_time_warehouse_validation.py --memory-limit 6GB --threads 4 --temp-dir "D:\duckdb_tmp\flyrank" --scratch-dir "D:\flyrank_warehouse_work" --max-ml-rows 100000
 ```
 
-Prefer setting `HF_TOKEN` in the process environment or entering it at the hidden prompt. Do not put the token in the script, notebook, command history, or GitHub.
+The Hugging Face READ token is requested through a hidden prompt. Do not paste it into chat, put it in the script, notebook, command history, or GitHub. The account behind the token must have accepted the dataset gate.
+
+### Memory and sampling behavior
+
+- The full eligible point-in-time cohort is written to `cohort_features_local.parquet` in the scratch directory. It is not loaded wholesale into pandas.
+- DuckDB uses the configured memory limit and spills intermediate aggregation state into `--temp-dir`. The script allows up to 100 GB of spill files; make sure the selected drive has enough free space.
+- The client-level train/test assignment is made from the full cohort before model sampling, so the unseen-client test remains separated from training clients.
+- `--max-ml-rows` is the target sample size for each model partition. Training is sampled by target class; validation and test use deterministic uniform hash sampling, preserving class prevalence in expectation. Hash sampling can vary slightly around the target, and the exact available and loaded row counts are recorded in the summary.
+- When validation sampling is too small to retain both classes, rerun with a higher `--max-ml-rows` value, such as `250000`, provided the machine has enough memory.
 
 ## Outputs
 
-Generated artifacts are written locally to `work/outputs/point_in_time/` and are not intended for Git:
-
-- `cohort_features_local.parquet` — row-level feature/label cohort; keep private/local.
-- `evaluation_summary.json` — aggregate evaluation summary; review for disclosure safety before publishing.
+The aggregate `evaluation_summary.json` remains under `work/outputs/point_in_time/`. The full row-level `cohort_features_local.parquet` is written to the directory passed through `--scratch-dir`. Keep both outputs local and private; do not commit the full cohort or pseudonymous IDs. Review the aggregate summary for disclosure safety before publishing.
 
 ## Important
 

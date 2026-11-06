@@ -54,6 +54,12 @@ def parse_args():
     p.add_argument("--decline-threshold", type=float, default=0.20)
     p.add_argument("--test-size", type=float, default=0.20)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--memory-limit", default="6GB", help="DuckDB memory budget; leave headroom for Windows and Python.")
+    p.add_argument("--threads", type=int, default=4)
+    default_temp = Path("D:/duckdb_tmp/flyrank") if Path("D:/").exists() else ROOT / "work" / "duckdb_tmp"
+    p.add_argument("--temp-dir", default=str(default_temp), help="DuckDB spill directory; prefer a drive with ample free space.")
+    p.add_argument("--scratch-dir", default=None, help="Directory for the full local Parquet cohort; defaults to the report output directory.")
+    p.add_argument("--max-ml-rows", type=int, default=100_000, help="Target sample size for each model partition.")
     return p.parse_args()
 
 
@@ -72,8 +78,7 @@ def cutoff_values(cutoffs=None):
     return values
 
 
-def build_cohort(
-    con,
+def build_cohort_sql(
     min_impressions: int,
     min_days: int,
     decline_threshold: float,
@@ -81,9 +86,23 @@ def build_cohort(
     fact_relation: str = FACT,
     cutoffs=None,
 ):
-    # The two feature windows end strictly before cutoff. The label window starts at cutoff.
-    sql = f"""
-    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(cutoffs)}),
+    rows = list(cutoffs) if cutoffs is not None else []
+    if cutoffs is None:
+        for split, dates in (
+            ("train", TRAIN_CUTOFFS),
+            ("validation", VALIDATION_CUTOFFS),
+            ("test", TEST_CUTOFFS),
+        ):
+            rows.extend((d, split) for d in dates)
+    if not rows:
+        raise ValueError("At least one cutoff is required.")
+
+    first_report_date = min(pd.Timestamp(date) for date, _ in rows) - pd.Timedelta(days=60)
+    end_report_date = max(pd.Timestamp(date) for date, _ in rows) + pd.Timedelta(days=30)
+
+    # Explicit global bounds allow date pruning before joining daily rows to the cutoffs.
+    return f"""
+    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(rows)}),
     daily AS (
         SELECT
             CAST(report_date AS DATE) AS report_date,
@@ -94,6 +113,8 @@ def build_cohort(
             NULLIF(gsc_avg_position, 0)::DOUBLE AS avg_position
         FROM {fact_relation}
         WHERE gsc_data_available IS TRUE
+          AND report_date >= DATE '{first_report_date:%Y-%m-%d}'
+          AND report_date < DATE '{end_report_date:%Y-%m-%d}'
     ),
     cohort AS (
         SELECT
@@ -150,9 +171,29 @@ def build_cohort(
       AND observed_days_older30 >= {min_days}
       AND observed_days_next30 >= {min_days}
     """
+
+
+def build_cohort(
+    con,
+    min_impressions: int,
+    min_days: int,
+    decline_threshold: float,
+    *,
+    fact_relation: str = FACT,
+    cutoffs=None,
+):
+    # Small synthetic tests use this in-memory helper. main() writes the full warehouse
+    # result to Parquet instead of collecting every row in pandas.
+    sql = build_cohort_sql(
+        min_impressions,
+        min_days,
+        decline_threshold,
+        fact_relation=fact_relation,
+        cutoffs=cutoffs,
+    )
     frame = con.sql(sql).df()
     if frame.empty:
-        raise RuntimeError("No eligible cohort rows returned. Check gate access, table schema, and thresholds.")
+        raise RuntimeError("No eligible cohort rows returned. Check source schema and thresholds.")
     frame["log1p_prev_impressions"] = np.log1p(frame["prev_impressions"].clip(lower=0))
     frame["log1p_prev_clicks"] = np.log1p(frame["prev_clicks"].clip(lower=0))
     frame["log1p_older_impressions"] = np.log1p(frame["older_impressions"].clip(lower=0))
@@ -161,6 +202,88 @@ def build_cohort(
     ).clip(lower=0, upper=1).fillna(0)
     frame["target_decline"] = frame["target_decline"].astype(int)
     return frame
+
+
+def sql_path(path: Path) -> str:
+    return str(path.resolve()).replace("\\", "/").replace("'", "''")
+
+
+def configure_duckdb(con, memory_limit: str, threads: int, temp_dir: Path) -> None:
+    if threads < 1:
+        raise ValueError("--threads must be at least 1.")
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    con.execute(f"SET memory_limit = '{memory_limit}'")
+    con.execute(f"SET threads = {threads}")
+    con.execute(f"SET temp_directory = '{sql_path(temp_dir)}'")
+    con.execute("SET max_temp_directory_size = '100GB'")
+    con.execute("SET preserve_insertion_order = false")
+
+
+HASH_BUCKETS = 10_000_019
+
+
+def fetch_model_sample(con, predicate: str, max_rows: int, *, stratified: bool):
+    # Hash sampling is repeatable. Training is class-stratified; validation/test
+    # are uniformly sampled so their observed class prevalence is retained in expectation.
+    counts = con.execute(
+        f"""
+        SELECT target_decline, COUNT(*) AS row_count
+        FROM cohort_with_group
+        WHERE {predicate}
+        GROUP BY target_decline
+        ORDER BY target_decline
+        """
+    ).df()
+    available = int(counts["row_count"].sum()) if not counts.empty else 0
+    if available == 0:
+        return pd.DataFrame(), {"available_rows": 0, "loaded_rows": 0, "sampled": False}
+
+    hash_expr = "hash(CAST(client_hash_id AS VARCHAR) || '|' || CAST(content_hash_id AS VARCHAR) || '|' || CAST(cutoff_date AS VARCHAR))"
+    if available <= max_rows:
+        sample_condition = "TRUE"
+        strategy = "all eligible rows"
+    elif stratified:
+        conditions = []
+        per_class_cap = max(1, max_rows // max(1, len(counts)))
+        for row in counts.itertuples(index=False):
+            row_count = int(row.row_count)
+            if row_count <= per_class_cap:
+                conditions.append(f"target_decline = {int(row.target_decline)}")
+            else:
+                threshold = max(1, int((per_class_cap / row_count) * HASH_BUCKETS * 0.95))
+                conditions.append(
+                    f"(target_decline = {int(row.target_decline)} AND {hash_expr} % {HASH_BUCKETS} < {threshold})"
+                )
+        sample_condition = "(" + " OR ".join(conditions) + ")"
+        strategy = "deterministic hash sample stratified by target class"
+    else:
+        threshold = max(1, int((max_rows / available) * HASH_BUCKETS * 0.95))
+        sample_condition = f"{hash_expr} % {HASH_BUCKETS} < {threshold}"
+        strategy = "deterministic uniform hash sample; class prevalence preserved in expectation"
+
+    frame = con.execute(
+        f"""
+        SELECT
+            ln(1.0 + greatest(prev_impressions, 0.0)) AS log1p_prev_impressions,
+            ln(1.0 + greatest(prev_clicks, 0.0)) AS log1p_prev_clicks,
+            ln(1.0 + greatest(older_impressions, 0.0)) AS log1p_older_impressions,
+            mean_position_prev30,
+            observed_days_prev30,
+            CAST(target_decline AS INTEGER) AS target_decline,
+            CASE WHEN older_impressions IS NULL OR older_impressions = 0 THEN 0.0
+                 ELSE greatest(0.0, least(1.0, 1.0 - prev_impressions / older_impressions))
+            END AS baseline_score
+        FROM cohort_with_group
+        WHERE {predicate}
+          AND ({sample_condition})
+        """
+    ).df()
+    return frame, {
+        "available_rows": available,
+        "loaded_rows": int(len(frame)),
+        "sampled": int(len(frame)) < available,
+        "strategy": strategy,
+    }
 
 
 def metric_block(y, scores, k=100):
@@ -180,6 +303,9 @@ def metric_block(y, scores, k=100):
 
 def main():
     args = parse_args()
+    if args.max_ml_rows < 2:
+        raise SystemExit("--max-ml-rows must be at least 2.")
+
     token = args.token or os.environ.get("HF_TOKEN")
     if not token:
         token = getpass.getpass("Hugging Face READ token (input hidden): ")
@@ -187,50 +313,138 @@ def main():
         raise SystemExit("A Hugging Face READ token is required.")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect()
-    con.execute(f"CREATE OR REPLACE SECRET hf (TYPE huggingface, TOKEN '{token.replace(chr(39), chr(39)+chr(39))}')")
+    scratch_dir = Path(args.scratch_dir).expanduser() if args.scratch_dir else OUT
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    temp_dir = Path(args.temp_dir).expanduser()
 
-    # Metadata-only verification before the main scan.
+    con = duckdb.connect()
+    configure_duckdb(con, args.memory_limit, args.threads, temp_dir)
+    con.execute(
+        f"CREATE OR REPLACE SECRET hf (TYPE huggingface, TOKEN '{token.replace(chr(39), chr(39)+chr(39))}')"
+    )
+
     bounds = con.sql(
         f"SELECT COUNT(*) AS rows, MIN(report_date) AS min_date, MAX(report_date) AS max_date FROM {FACT}"
     ).df()
     print("Warehouse metadata:", bounds.to_dict(orient="records"))
+    print(
+        f"DuckDB memory limit: {args.memory_limit}; threads: {args.threads}; "
+        f"spill directory: {temp_dir}; scratch directory: {scratch_dir}"
+    )
 
-    frame = build_cohort(
-        con,
+    # Write the full eligible cohort to disk. DuckDB can spill intermediate aggregation
+    # state to temp_dir; Python never has to collect the complete cohort into RAM.
+    cohort_path = scratch_dir / "cohort_features_local.parquet"
+    cohort_sql = build_cohort_sql(
         args.min_impressions,
         args.min_observed_days,
         args.decline_threshold,
     )
-    frame.to_parquet(OUT / "cohort_features_local.parquet", index=False)
+    print("Building full point-in-time cohort and spilling intermediate work to disk...", flush=True)
+    con.execute(
+        f"COPY ({cohort_sql}) TO '{sql_path(cohort_path)}' (FORMAT PARQUET, COMPRESSION ZSTD)"
+    )
+    cohort_relation = f"read_parquet('{sql_path(cohort_path)}')"
+    cohort_rows = int(con.execute(f"SELECT COUNT(*) FROM {cohort_relation}").fetchone()[0])
+    if cohort_rows == 0:
+        raise RuntimeError("No eligible cohort rows returned. Check source schema and thresholds.")
+    print(f"Full local cohort written: {cohort_rows:,} rows -> {cohort_path}", flush=True)
 
-    clients = sorted(frame["client_hash_id"].dropna().astype(str).unique())
+    # Decide client holdout from the full cohort, not from the smaller model samples.
+    client_frame = con.execute(
+        f"""
+        SELECT DISTINCT CAST(client_hash_id AS VARCHAR) AS client_hash_id
+        FROM {cohort_relation}
+        WHERE client_hash_id IS NOT NULL
+        ORDER BY 1
+        """
+    ).df()
+    clients = client_frame["client_hash_id"].astype(str).to_numpy()
     if len(clients) < 5:
         raise RuntimeError("Too few eligible clients for a meaningful client holdout.")
     splitter = GroupShuffleSplit(n_splits=1, test_size=args.test_size, random_state=args.seed)
     train_client_idx, test_client_idx = next(
-        splitter.split(np.zeros(len(clients)), groups=np.asarray(clients))
+        splitter.split(np.zeros(len(clients)), groups=clients)
     )
-    train_clients = set(np.asarray(clients)[train_client_idx])
-    test_clients = set(np.asarray(clients)[test_client_idx])
+    client_split = np.full(len(clients), "train", dtype=object)
+    client_split[test_client_idx] = "test"
+    assignment = pd.DataFrame(
+        {"client_hash_id": clients, "client_split": client_split}
+    )
+    con.register("client_assignment_input", assignment)
+    con.execute(
+        """
+        CREATE OR REPLACE TEMP TABLE client_assignment AS
+        SELECT * FROM client_assignment_input
+        """
+    )
+    con.unregister("client_assignment_input")
+    con.execute(
+        f"""
+        CREATE OR REPLACE TEMP VIEW cohort_with_group AS
+        SELECT c.*, a.client_split
+        FROM {cohort_relation} AS c
+        INNER JOIN client_assignment AS a
+          ON CAST(c.client_hash_id AS VARCHAR) = a.client_hash_id
+        """
+    )
 
-    train = frame[
-        frame["split_name"].eq("train")
-        & frame["client_hash_id"].astype(str).isin(train_clients)
-    ].copy()
-    validation = frame[
-        frame["split_name"].eq("validation")
-        & frame["client_hash_id"].astype(str).isin(train_clients)
-    ].copy()
-    test = frame[
-        frame["split_name"].eq("test")
-        & frame["client_hash_id"].astype(str).isin(test_clients)
-    ].copy()
+    populations = con.execute(
+        """
+        SELECT
+            split_name,
+            client_split,
+            COUNT(*) AS rows,
+            COUNT(DISTINCT client_hash_id) AS clients
+        FROM cohort_with_group
+        GROUP BY 1, 2
+        """
+    ).df()
+
+    def population(split_name: str, client_split_name: str) -> dict:
+        selected = populations[
+            populations["split_name"].eq(split_name)
+            & populations["client_split"].eq(client_split_name)
+        ]
+        if selected.empty:
+            return {"rows": 0, "clients": 0}
+        return {
+            "rows": int(selected.iloc[0]["rows"]),
+            "clients": int(selected.iloc[0]["clients"]),
+        }
+
+    train, train_sample = fetch_model_sample(
+        con,
+        "split_name = 'train' AND client_split = 'train'",
+        args.max_ml_rows,
+        stratified=True,
+    )
+    validation, validation_sample = fetch_model_sample(
+        con,
+        "split_name = 'validation' AND client_split = 'train'",
+        args.max_ml_rows,
+        stratified=False,
+    )
+    test, test_sample = fetch_model_sample(
+        con,
+        "split_name = 'test' AND client_split = 'test'",
+        args.max_ml_rows,
+        stratified=False,
+    )
 
     if min(len(train), len(validation), len(test)) == 0:
-        raise RuntimeError("Train, validation, or unseen-client test cohort is empty.")
+        raise RuntimeError(
+            "Train, validation, or unseen-client test cohort is empty. "
+            "Review cutoff coverage and eligibility thresholds."
+        )
     if train["target_decline"].nunique() < 2 or validation["target_decline"].nunique() < 2:
-        raise RuntimeError("Training and validation require both target classes.")
+        raise RuntimeError(
+            "Training and validation require both target classes after sampling. "
+            "Try a larger --max-ml-rows value."
+        )
+
+    # Release DuckDB's buffers before fitting scikit-learn models.
+    con.close()
 
     X_train, y_train = train[FEATURES], train["target_decline"]
     X_val, y_val = validation[FEATURES], validation["target_decline"]
@@ -245,10 +459,11 @@ def main():
         "random_forest": make_pipeline(
             SimpleImputer(strategy="median"),
             RandomForestClassifier(
-                n_estimators=400,
+                n_estimators=250,
+                max_depth=16,
                 min_samples_leaf=20,
                 class_weight="balanced_subsample",
-                n_jobs=-1,
+                n_jobs=args.threads,
                 random_state=args.seed,
             ),
         ),
@@ -265,16 +480,23 @@ def main():
             validation_results[name]["precision_at_100"] or -1,
         ),
     )
-    # Refit on train + validation (same client population), then evaluate once on unseen clients.
     train_val = pd.concat([train, validation], ignore_index=True)
     final_model = models[selected]
     final_model.fit(train_val[FEATURES], train_val["target_decline"])
     test_scores = final_model.predict_proba(X_test)[:, 1]
 
+    train_population = population("train", "train")
+    validation_population = population("validation", "train")
+    test_population = population("test", "test")
     results = {
         "status": "executed_point_in_time_warehouse_evaluation",
         "source": "FlyRank/internship-warehouse",
         "source_table": "fact_content_daily_performance",
+        "warehouse_rows": int(bounds.iloc[0]["rows"]),
+        "warehouse_min_date": str(bounds.iloc[0]["min_date"]),
+        "warehouse_max_date": str(bounds.iloc[0]["max_date"]),
+        "full_eligible_cohort_rows": cohort_rows,
+        "full_cohort_parquet": str(cohort_path),
         "feature_window": "30 calendar days immediately before cutoff; report_date < cutoff",
         "target_window": "30 calendar days beginning at cutoff; cutoff <= report_date < cutoff + 30 days",
         "target": f"next-30-day impressions decline greater than {args.decline_threshold:.0%} versus immediately preceding 30 days",
@@ -287,33 +509,44 @@ def main():
         "validation_cutoffs": VALIDATION_CUTOFFS,
         "test_cutoffs": TEST_CUTOFFS,
         "client_split_seed": args.seed,
-        "train_clients": len(train_clients),
-        "test_clients": len(test_clients),
-        "client_overlap": len(train_clients & test_clients),
+        "train_clients": int(len(train_client_idx)),
+        "test_clients": int(len(test_client_idx)),
+        "client_overlap": int(len(set(clients[train_client_idx]) & set(clients[test_client_idx]))),
         "cohort_sizes": {
-            "train_rows": int(len(train)),
-            "validation_rows": int(len(validation)),
-            "unseen_client_test_rows": int(len(test)),
-            "train_clients": int(train["client_hash_id"].nunique()),
-            "validation_clients": int(validation["client_hash_id"].nunique()),
-            "unseen_test_clients": int(test["client_hash_id"].nunique()),
+            "train_rows_available": train_population["rows"],
+            "validation_rows_available": validation_population["rows"],
+            "unseen_client_test_rows_available": test_population["rows"],
+            "train_clients": train_population["clients"],
+            "validation_clients": validation_population["clients"],
+            "unseen_test_clients": test_population["clients"],
+        },
+        "model_sample": {
+            "target_rows_per_partition": args.max_ml_rows,
+            "train": train_sample,
+            "validation": validation_sample,
+            "unseen_client_test": test_sample,
+            "note": "The full cohort is stored in local Parquet. Model metrics use the samples documented here; validation and test use uniform deterministic hash sampling, while training is stratified by target class.",
+        },
+        "model_rows_used": {
+            "train": int(len(train)),
+            "validation": int(len(validation)),
+            "unseen_client_test": int(len(test)),
         },
         "validation_model_selection_metrics": validation_results,
         "selected_model": selected,
         "unseen_client_future_test": metric_block(y_test, test_scores),
         "unseen_client_future_test_baseline": metric_block(y_test, test["baseline_score"].to_numpy()),
-        "test_cutoff": TEST_CUTOFFS,
         "limitations": [
             "This is predictive association, not causal evidence that refreshing content causes recovery.",
             "Content/client metadata and query-mix features are deliberately excluded until their effective timestamps can be verified.",
             "The fixed 90-day query table is excluded because its window overlaps the final warehouse months.",
             "Metrics apply only to the eligible observed-GSC cohort and configured thresholds.",
+            "Model metrics are sample-based when a partition exceeds --max-ml-rows; see model_sample for counts and sampling details.",
         ],
     }
     (OUT / "evaluation_summary.json").write_text(json.dumps(results, indent=2))
-    # Aggregate metrics only; no pseudonymous row-level identifiers are exported.
     print(json.dumps(results, indent=2))
-    print(f"Local outputs saved under: {OUT}")
+    print(f"Evaluation summary saved under: {OUT / 'evaluation_summary.json'}")
 
 
 if __name__ == "__main__":
