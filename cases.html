@@ -88,12 +88,12 @@
                 </div>
                 <div class="beat">
                     <div class="beat-title">Beat 2: What I Did & Decided</div>
-                    <p>I engineered a leak-free Random Forest priority scoring model using 30,000 anonymized content items across 32 clients from the FlyRank Search Intelligence dataset. I explicitly isolated target-derived features (trend_pct, is_declining_label) and evaluated performance using an 80/20 grouped client holdout split.</p>
+                    <p>I built an exploratory Random Forest priority-scoring prototype using a 30,000-row anonymized snapshot across 32 clients. A later audit found that 90-day feature aggregates overlap the recent 30-day target period. Excluding explicit target-derived fields and grouping clients does not remove this temporal leakage risk.</p>
                 </div>
                 <div class="beat">
                     <div class="beat-title">Beat 3: What Came of It</div>
-                    <p>Our model achieved a Precision@50 of 100.0% on unseen client holdout domains, providing content strategists with an automated, auditable action queue that eliminates false positive editorial rewrites.</p>
-                    <div class="metric-pill">Precision@50: 100.0% | Holdout ROC-AUC: 0.9659</div>
+                    <p>The original Precision@K and ROC-AUC figures have been withdrawn as predictive-performance claims. The prototype demonstrates a data-preparation, model-experimentation, and decision-support workflow; a valid evaluation requires point-in-time features and a forward outcome window.</p>
+                    <div class="metric-pill">Validation status: exploratory only · no approved predictive metrics</div>
                 </div>
             </article>
 
