@@ -24,7 +24,7 @@ Official portfolio and applied machine-learning project by **Sohila Khaled Abbas
 
 ## ⚠️ Validation status — temporal audit in progress
 
-The original 30,000-row snapshot experiment is retained as a historical exploratory artifact, **not a valid prospective model evaluation**. Its feature aggregates and the `trend_direction` target are calculated from overlapping recent-period windows. A client-grouped split prevents client overlap, but it does not prevent temporal leakage. The previously published Precision@K and ROC-AUC figures are withdrawn pending a point-in-time rebuild from daily warehouse data. Do not use the old metrics as evidence of predictive performance.
+The project work covered both the 30,000-row starter snapshot and the approximately 79-million-row daily warehouse release queried with DuckDB. The original 30,000-row snapshot experiment is retained as a historical exploratory artifact, **not a valid prospective model evaluation**. Its feature aggregates and the `trend_direction` target are calculated from overlapping recent-period windows. A client-grouped split prevents client overlap, but it does not prevent temporal leakage. The previously published Precision@K and ROC-AUC figures are withdrawn pending a point-in-time rebuild from daily warehouse data. Do not use the old metrics as evidence of predictive performance.
 
 See [the temporal validation remediation plan](docs/temporal-validation-remediation.md).
 
