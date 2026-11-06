@@ -55,7 +55,7 @@ def parse_args():
     p.add_argument("--test-size", type=float, default=0.20)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--memory-limit", default="6GB", help="DuckDB memory budget; leave headroom for Windows and Python.")
-    p.add_argument("--threads", type=int, default=4)
+    p.add_argument("--threads", type=int, default=2)
     default_temp = Path("D:/duckdb_tmp/flyrank") if Path("D:/").exists() else ROOT / "work" / "duckdb_tmp"
     p.add_argument("--temp-dir", default=str(default_temp), help="DuckDB spill directory; prefer a drive with ample free space.")
     p.add_argument("--scratch-dir", default=None, help="Directory for the full local Parquet cohort; defaults to the report output directory.")
@@ -131,27 +131,27 @@ def build_cohort_sql(
             SUM(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
                       AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
                      THEN d.impressions ELSE 0 END) AS older_impressions,
-            COUNT(DISTINCT CASE
+            SUM(CASE
                 WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
                  AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
                  AND d.impressions IS NOT NULL
-                THEN d.report_date END) AS observed_days_older30,
+                THEN 1 ELSE 0 END) AS observed_days_older30,
             AVG(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
                       AND d.report_date < c.cutoff_date
                      THEN d.avg_position END) AS mean_position_prev30,
-            COUNT(DISTINCT CASE
+            SUM(CASE
                 WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
                  AND d.report_date < c.cutoff_date
                  AND d.impressions IS NOT NULL
-                THEN d.report_date END) AS observed_days_prev30,
+                THEN 1 ELSE 0 END) AS observed_days_prev30,
             SUM(CASE WHEN d.report_date >= c.cutoff_date
                       AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
                      THEN d.impressions ELSE 0 END) AS next_impressions,
-            COUNT(DISTINCT CASE
+            SUM(CASE
                 WHEN d.report_date >= c.cutoff_date
                  AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
                  AND d.impressions IS NOT NULL
-                THEN d.report_date END) AS observed_days_next30
+                THEN 1 ELSE 0 END) AS observed_days_next30
         FROM cutoffs c
         JOIN daily d
           ON d.report_date >= c.cutoff_date - INTERVAL 60 DAY
@@ -332,23 +332,61 @@ def main():
         f"spill directory: {temp_dir}; scratch directory: {scratch_dir}"
     )
 
-    # Write the full eligible cohort to disk. DuckDB can spill intermediate aggregation
-    # state to temp_dir; Python never has to collect the complete cohort into RAM.
-    cohort_path = scratch_dir / "cohort_features_local.parquet"
-    cohort_sql = build_cohort_sql(
-        args.min_impressions,
-        args.min_observed_days,
-        args.decline_threshold,
+    # The full 11-cutoff query creates an oversized aggregate hash table. Process one
+    # 90-day cutoff window at a time, and keep one Parquet part per cutoff. This bounds
+    # the active grouping state and avoids materializing the combined cohort in memory.
+    cohort_parts_dir = scratch_dir / "cohort_parts"
+    cohort_parts_dir.mkdir(parents=True, exist_ok=True)
+    for old_part in cohort_parts_dir.glob("cohort_*.parquet"):
+        old_part.unlink()
+
+    cutoff_jobs = []
+    for split_name, dates in (
+        ("train", TRAIN_CUTOFFS),
+        ("validation", VALIDATION_CUTOFFS),
+        ("test", TEST_CUTOFFS),
+    ):
+        cutoff_jobs.extend((date, split_name) for date in dates)
+
+    print(
+        f"Building {len(cutoff_jobs)} point-in-time cutoff cohorts sequentially "
+        "and writing one Parquet part per cutoff...",
+        flush=True,
     )
-    print("Building full point-in-time cohort and spilling intermediate work to disk...", flush=True)
-    con.execute(
-        f"COPY ({cohort_sql}) TO '{sql_path(cohort_path)}' (FORMAT PARQUET, COMPRESSION ZSTD)"
-    )
-    cohort_relation = f"read_parquet('{sql_path(cohort_path)}')"
+    for index, (cutoff_date, split_name) in enumerate(cutoff_jobs, start=1):
+        cohort_sql = build_cohort_sql(
+            args.min_impressions,
+            args.min_observed_days,
+            args.decline_threshold,
+            cutoffs=[(cutoff_date, split_name)],
+        )
+        part_path = cohort_parts_dir / f"cohort_{split_name}_{cutoff_date}.parquet"
+        print(
+            f"[{index}/{len(cutoff_jobs)}] {split_name}: cutoff={cutoff_date} "
+            f"-> {part_path.name}",
+            flush=True,
+        )
+        con.execute(
+            f"COPY ({cohort_sql}) TO '{sql_path(part_path)}' "
+            "(FORMAT PARQUET, COMPRESSION ZSTD)"
+        )
+        part_rows = int(
+            con.execute(
+                f"SELECT COUNT(*) FROM read_parquet('{sql_path(part_path)}')"
+            ).fetchone()[0]
+        )
+        print(f"    rows written: {part_rows:,}", flush=True)
+
+    cohort_glob = cohort_parts_dir / "*.parquet"
+    cohort_relation = f"read_parquet('{sql_path(cohort_glob)}')"
     cohort_rows = int(con.execute(f"SELECT COUNT(*) FROM {cohort_relation}").fetchone()[0])
     if cohort_rows == 0:
         raise RuntimeError("No eligible cohort rows returned. Check source schema and thresholds.")
-    print(f"Full local cohort written: {cohort_rows:,} rows -> {cohort_path}", flush=True)
+    print(
+        f"Full local cohort written: {cohort_rows:,} rows across "
+        f"{len(cutoff_jobs)} Parquet parts -> {cohort_parts_dir}",
+        flush=True,
+    )
 
     # Decide client holdout from the full cohort, not from the smaller model samples.
     client_frame = con.execute(
@@ -496,7 +534,8 @@ def main():
         "warehouse_min_date": str(bounds.iloc[0]["min_date"]),
         "warehouse_max_date": str(bounds.iloc[0]["max_date"]),
         "full_eligible_cohort_rows": cohort_rows,
-        "full_cohort_parquet": str(cohort_path),
+        "full_cohort_parquet_glob": str(cohort_glob),
+        "full_cohort_parts": len(cutoff_jobs),
         "feature_window": "30 calendar days immediately before cutoff; report_date < cutoff",
         "target_window": "30 calendar days beginning at cutoff; cutoff <= report_date < cutoff + 30 days",
         "target": f"next-30-day impressions decline greater than {args.decline_threshold:.0%} versus immediately preceding 30 days",
