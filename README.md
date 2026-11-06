@@ -28,6 +28,8 @@ The project work covered both the 30,000-row starter snapshot and the approximat
 
 See [the temporal validation remediation plan](docs/temporal-validation-remediation.md).
 
+A reproducible point-in-time rebuild workflow is now available in [the hosted warehouse validation guide](docs/point-in-time-warehouse-rebuild.md) and `scripts/06_point_in_time_warehouse_validation.py`. It queries the authorized Hugging Face Parquet source through DuckDB, keeps source data local, and does not publish replacement metrics until the workflow has been run and audited.
+
 ---
 
 ## 📁 Repository Structure
