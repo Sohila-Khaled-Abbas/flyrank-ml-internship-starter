@@ -238,7 +238,7 @@ def fetch_model_sample(con, predicate: str, max_rows: int, *, stratified: bool):
     if available == 0:
         return pd.DataFrame(), {"available_rows": 0, "loaded_rows": 0, "sampled": False}
 
-    hash_expr = "hash(client_hash_id, content_hash_id, cutoff_date)"
+    hash_expr = "hash(CAST(client_hash_id AS VARCHAR) || '|' || CAST(content_hash_id AS VARCHAR) || '|' || CAST(cutoff_date AS VARCHAR))"
     if available <= max_rows:
         sample_condition = "TRUE"
         strategy = "all eligible rows"
@@ -373,15 +373,21 @@ def main():
     )
     con.register("client_assignment_input", assignment)
     con.execute(
+        """
+        CREATE OR REPLACE TEMP TABLE client_assignment AS
+        SELECT * FROM client_assignment_input
+        """
+    )
+    con.unregister("client_assignment_input")
+    con.execute(
         f"""
         CREATE OR REPLACE TEMP VIEW cohort_with_group AS
         SELECT c.*, a.client_split
         FROM {cohort_relation} AS c
-        INNER JOIN client_assignment_input AS a
+        INNER JOIN client_assignment AS a
           ON CAST(c.client_hash_id AS VARCHAR) = a.client_hash_id
         """
     )
-    con.unregister("client_assignment_input")
 
     populations = con.execute(
         """
@@ -436,6 +442,9 @@ def main():
             "Training and validation require both target classes after sampling. "
             "Try a larger --max-ml-rows value."
         )
+
+    # Release DuckDB's buffers before fitting scikit-learn models.
+    con.close()
 
     X_train, y_train = train[FEATURES], train["target_decline"]
     X_val, y_val = validation[FEATURES], validation["target_decline"]
