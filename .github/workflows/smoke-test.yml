@@ -23,8 +23,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run the full pipeline on the sample
-        run: python scripts/run_all.py
+      - name: Run the historical snapshot pipeline for smoke testing only
+        # This explicit flag bypasses the safety block solely to test the legacy workflow.
+        # All outputs remain exploratory and are not approved predictive metrics.
+        run: python scripts/run_all.py --allow-exploratory-snapshot
 
       - name: Check expected outputs exist
         run: |
@@ -71,6 +73,16 @@ jobs:
               try:
                   nb = json.load(open(p))
               except Exception:
+                  continue
+              first_markdown = next(
+                  ("".join(c.get("source", [])) for c in nb.get("cells", [])
+                   if c.get("cell_type") == "markdown"),
+                  "",
+              )
+              # The former capstone notebook is deliberately retained as an unexecuted
+              # historical record after withdrawing its overlapping-window metrics.
+              if p.endswith("capstone.ipynb") and "HISTORICAL EXPERIMENT ONLY" in first_markdown:
+                  print(f"::notice file={p}::{p} is an archival snapshot experiment; outputs were intentionally cleared.")
                   continue
               code = [c for c in nb.get("cells", []) if c.get("cell_type") == "code"]
               src = sum(len("".join(c.get("source", []))) for c in code)
