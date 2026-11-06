@@ -46,7 +46,7 @@ The Hugging Face READ token is requested through a hidden prompt. Do not paste i
 - The full eligible point-in-time cohort is written to `cohort_features_local.parquet` in the scratch directory. It is not loaded wholesale into pandas.
 - DuckDB uses the configured memory limit and spills intermediate aggregation state into `--temp-dir`. The script allows up to 100 GB of spill files; make sure the selected drive has enough free space.
 - The client-level train/test assignment is made from the full cohort before model sampling, so the unseen-client test remains separated from training clients.
-- At most `--max-ml-rows` are loaded for each model partition. Training is sampled by target class; validation and test use deterministic uniform hash sampling, preserving class prevalence in expectation. The exact available and loaded row counts are recorded in the summary.
+- `--max-ml-rows` is the target sample size for each model partition. Training is sampled by target class; validation and test use deterministic uniform hash sampling, preserving class prevalence in expectation. Hash sampling can vary slightly around the target, and the exact available and loaded row counts are recorded in the summary.
 - When validation sampling is too small to retain both classes, rerun with a higher `--max-ml-rows` value, such as `250000`, provided the machine has enough memory.
 
 ## Outputs
