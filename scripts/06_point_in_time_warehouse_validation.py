@@ -38,6 +38,7 @@ TEST_CUTOFFS = ["2026-06-01"]
 FEATURES = [
     "log1p_prev_impressions",
     "log1p_prev_clicks",
+    "log1p_older_impressions",
     "mean_position_prev30",
     "gsc_observed_days_prev30",
 ]
@@ -97,6 +98,13 @@ def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: fl
             SUM(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
                       AND d.report_date < c.cutoff_date
                      THEN d.clicks ELSE 0 END) AS prev_clicks,
+            SUM(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
+                      AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
+                     THEN d.impressions ELSE 0 END) AS older_impressions,
+            COUNT(DISTINCT CASE
+                WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
+                 AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
+                THEN d.report_date END) AS observed_days_older30,
             AVG(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
                       AND d.report_date < c.cutoff_date
                      THEN d.avg_position END) AS mean_position_prev30,
@@ -127,6 +135,7 @@ def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: fl
     FROM cohort
     WHERE prev_impressions >= {min_impressions}
       AND observed_days_prev30 >= {min_days}
+      AND observed_days_older30 >= {min_days}
       AND observed_days_next30 >= {min_days}
     """
     frame = con.sql(sql).df()
@@ -134,6 +143,10 @@ def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: fl
         raise RuntimeError("No eligible cohort rows returned. Check gate access, table schema, and thresholds.")
     frame["log1p_prev_impressions"] = np.log1p(frame["prev_impressions"].clip(lower=0))
     frame["log1p_prev_clicks"] = np.log1p(frame["prev_clicks"].clip(lower=0))
+    frame["log1p_older_impressions"] = np.log1p(frame["older_impressions"].clip(lower=0))
+    frame["baseline_score"] = (
+        1.0 - frame["prev_impressions"] / frame["older_impressions"].replace(0, np.nan)
+    ).clip(lower=0, upper=1).fillna(0)
     frame["target_decline"] = frame["target_decline"].astype(int)
     return frame
 
@@ -252,7 +265,8 @@ def main():
         "source_table": "fact_content_daily_performance",
         "feature_window": "30 calendar days immediately before cutoff; report_date < cutoff",
         "target_window": "30 calendar days beginning at cutoff; cutoff <= report_date < cutoff + 30 days",
-        "target": f"next-30-day impressions decline greater than {args.decline_threshold:.0%} versus prior 30 days",
+        "target": f"next-30-day impressions decline greater than {args.decline_threshold:.0%} versus immediately preceding 30 days",
+        "baseline": "prior 30-day decline score relative to the 30 days before that; pre-cutoff only",
         "availability_rule": "gsc_data_available IS TRUE; minimum observed days enforced in both windows",
         "minimum_prior_impressions": args.min_impressions,
         "minimum_observed_days_each_window": args.min_observed_days,
@@ -268,6 +282,7 @@ def main():
         "validation": validation_results,
         "selected_model": selected,
         "unseen_client_future_test": metric_block(y_test, test_scores),
+        "unseen_client_future_test_baseline": metric_block(y_test, test["baseline_score"].to_numpy()),
         "test_cutoff": TEST_CUTOFFS,
         "limitations": [
             "This is predictive association, not causal evidence that refreshing content causes recovery.",
