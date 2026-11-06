@@ -59,7 +59,7 @@ def parse_args():
     default_temp = Path("D:/duckdb_tmp/flyrank") if Path("D:/").exists() else ROOT / "work" / "duckdb_tmp"
     p.add_argument("--temp-dir", default=str(default_temp), help="DuckDB spill directory; prefer a drive with ample free space.")
     p.add_argument("--scratch-dir", default=None, help="Directory for the full local Parquet cohort; defaults to the report output directory.")
-    p.add_argument("--max-ml-rows", type=int, default=100_000, help="Maximum rows loaded for each model partition.")
+    p.add_argument("--max-ml-rows", type=int, default=100_000, help="Target sample size for each model partition.")
     return p.parse_args()
 
 
@@ -250,14 +250,14 @@ def fetch_model_sample(con, predicate: str, max_rows: int, *, stratified: bool):
             if row_count <= per_class_cap:
                 conditions.append(f"target_decline = {int(row.target_decline)}")
             else:
-                threshold = max(1, int((per_class_cap / row_count) * HASH_BUCKETS * 0.98))
+                threshold = max(1, int((per_class_cap / row_count) * HASH_BUCKETS * 0.95))
                 conditions.append(
                     f"(target_decline = {int(row.target_decline)} AND {hash_expr} % {HASH_BUCKETS} < {threshold})"
                 )
         sample_condition = "(" + " OR ".join(conditions) + ")"
         strategy = "deterministic hash sample stratified by target class"
     else:
-        threshold = max(1, int((max_rows / available) * HASH_BUCKETS * 0.98))
+        threshold = max(1, int((max_rows / available) * HASH_BUCKETS * 0.95))
         sample_condition = f"{hash_expr} % {HASH_BUCKETS} < {threshold}"
         strategy = "deterministic uniform hash sample; class prevalence preserved in expectation"
 
@@ -521,7 +521,7 @@ def main():
             "unseen_test_clients": test_population["clients"],
         },
         "model_sample": {
-            "max_rows_per_partition": args.max_ml_rows,
+            "target_rows_per_partition": args.max_ml_rows,
             "train": train_sample,
             "validation": validation_sample,
             "unseen_client_test": test_sample,
