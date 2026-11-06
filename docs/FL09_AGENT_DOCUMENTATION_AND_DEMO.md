@@ -19,7 +19,7 @@ Content decay silently erodes organic search traffic across 54.2% of published w
 When triggered by natural language or scheduled cron, the agent:
 1. Ingests raw Search Console snapshot logs (30,000+ items across multi-client portfolios).
 2. Runs programmatic **temporal data leakage checks** (blocking target-derived features).
-3. Executes a leak-free Random Forest ranking model trained on client-isolated partitions.
+3. Executes a historical snapshot Random Forest experiment (not temporally validated) trained on client-isolated partitions.
 4. Generates an auditable, ranked **Content Refresh Opportunity Queue** (`work/outputs/n8n_top50_recommendations.csv`) prioritized by expected traffic recovery impact.
 
 ---
@@ -39,8 +39,8 @@ flowchart TD
         LeakCheck -- Fail --> Abort["❌ Abort Pipeline & Raise Contract Error"]
     end
     
-    GroupSplit --> Train["8. Fit Random Forest Classifier (5 Leak-Free Signals)"]
-    Train --> Eval["9. Compute Holdout Precision@50 & ROC-AUC"]
+    GroupSplit --> Train["8. Fit Random Forest Classifier (snapshot signals with overlapping time windows)"]
+    Train --> Eval["9. Historical metrics (withdrawn pending temporal validation)"]
     Eval --> Pause{"10. User Confirmation Pause<br/>(File Overwrite / Git Commit)"}
     Pause -- Confirmed --> Export["11. Export work/outputs/n8n_top50_recommendations.csv"]
 ```
@@ -90,7 +90,7 @@ python scripts/n8n_pipeline_handler.py
 ## 📊 4. Usage Examples & Output Receipt
 
 ### Natural Language Trigger (Claude / Assistant Prompt):
-> *"Run the weekly content refresh priority audit across all client domains. Ensure temporal leakage assertions are active and export the top 50 ranked candidates for editorial review."*
+> *"Run the exploratory snapshot workflow for demonstration only. Do not interpret rankings as validated predictions; temporal validation is pending."*
 
 ### Agent Terminal Execution Log:
 ```text
@@ -103,9 +103,9 @@ python scripts/n8n_pipeline_handler.py
 [Data Partition] Applied Grouped Client Holdout Split (25 train / 7 holdout).
 [Model Training] Fitting Random Forest Classifier (n_estimators=100)...
 [Evaluation] Holdout Metrics on Unseen Client Domains:
-  - Precision@50:  100.0%
-  - Precision@100: 100.0%
-  - Holdout ROC-AUC: 0.9659
+  - Precision@50: WITHDRAWN
+  - Precision@100: WITHDRAWN
+  - Holdout ROC-AUC: WITHDRAWN
   - Lift over Random Base Rate: +77.3 percentage points
 [Export Receipt] Generated 'work/outputs/n8n_top50_recommendations.csv' (50 prioritized actions).
 ```
@@ -123,9 +123,9 @@ python scripts/n8n_pipeline_handler.py
 
 | Evaluation Metric | Baseline Random Pick | Hand-Written Rule | **Random Forest ML (Holdout)** | Lift vs Base Rate |
 |---|---|---|---|---|
-| **Precision@50** | 22.7% | 100.0% | **100.0%** | **+77.3 pp** |
-| **Precision@100** | 22.7% | 100.0% | **98.0%** | **+75.3 pp** |
-| **Holdout ROC-AUC** | 0.5000 | N/A | **0.9659** | **+0.4659** |
+| **Precision@50** | 22.7% | WITHDRAWN | **WITHDRAWN** | **+77.3 pp** |
+| **Precision@100** | 22.7% | WITHDRAWN | **WITHDRAWN** | **+75.3 pp** |
+| **Holdout ROC-AUC** | 0.5000 | N/A | **WITHDRAWN** | **+0.4659** |
 | **False-Positive Rewrite Cost** | ~4.0 hrs/post | 0.0 hrs | **0.0 hrs** | **100% Waste Reduction** |
 
 ---
@@ -172,3 +172,8 @@ TIMESTAMPS:
 
 > *"I built the n8n webhook automation workflow, script boilerplate, and initial data contract asserts using Claude Code. I independently audited and verified the temporal leakage exclusion logic, implemented the grouped client holdout split mathematics, verified ROC-AUC calculations against raw CSV ground truth, and recorded the unscripted live demo walkthrough."*  
 > — **Sohila Khaled Abbas**
+
+
+## Validation status correction
+
+The original snapshot features overlap the recent-period target window. Client grouping and exclusion of explicit target-derived columns do not establish point-in-time validity. All previously published Precision@K and ROC-AUC metrics are withdrawn. See [the remediation plan](temporal-validation-remediation.md). The n8n integration demonstrates workflow orchestration only; it does not make the model's predictions validated.
