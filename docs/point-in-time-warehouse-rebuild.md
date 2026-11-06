@@ -5,7 +5,7 @@ This workflow is designed to replace the withdrawn 30k snapshot metrics with a r
 ## Source and access
 
 - Dataset: [FlyRank/internship-warehouse](https://huggingface.co/datasets/FlyRank/internship-warehouse)
-- Fact table: `fact_content_daily_performance` (about 78.8M rows; report-date × client × content grain)
+- Fact table: `fact_content_daily_performance` (about 78.8M rows; one row per report-date × client × content key)
 - Storage: gated Parquet; use only access granted to your Hugging Face account.
 - The 30k CSV remains a historical starter exercise. It is not used for prospective evaluation.
 
@@ -43,7 +43,7 @@ The Hugging Face READ token is requested through a hidden prompt. Do not paste i
 
 ### Memory and sampling behavior
 
-- The full eligible point-in-time cohort is written as one Parquet part per monthly cutoff under `cohort_features_parts\`. Each query reads only the source months touched by its 90-day window. The parts are not loaded wholesale into pandas.
+- The full eligible point-in-time cohort is written as one Parquet part per monthly cutoff under `cohort_features_parts/`. Each query reads only the source months touched by its 90-day window. The parts are not loaded wholesale into pandas.
 - DuckDB uses the configured memory limit, one worker thread by default, and spills intermediate aggregation state into `--temp-dir`. The script allows up to 100 GB of spill files; make sure the selected drive has enough free space.
 - The client-level train/test assignment is made from the full cohort before model sampling, so the unseen-client test remains separated from training clients.
 - `--max-ml-rows` is the target sample size for each model partition. Training is sampled by target class; validation and test use deterministic uniform hash sampling, preserving class prevalence in expectation. Hash sampling can vary slightly around the target, and the exact available and loaded row counts are recorded in the summary.
@@ -51,7 +51,7 @@ The Hugging Face READ token is requested through a hidden prompt. Do not paste i
 
 ## Outputs
 
-The aggregate `evaluation_summary.json` remains under `work/outputs/point_in_time/`. The full row-level cohort is written as cutoff-specific Parquet files under `cohort_features_parts\` inside the directory passed through `--scratch-dir`. Keep both outputs local and private; do not commit the full cohort or pseudonymous IDs. Review the aggregate summary for disclosure safety before publishing.
+The aggregate `evaluation_summary.json` remains under `work/outputs/point_in_time/`. The full row-level cohort is written as cutoff-specific Parquet files under `cohort_features_parts/` inside the directory passed through `--scratch-dir`. Keep both outputs local and private; do not commit the full cohort or pseudonymous IDs. Review the aggregate summary for disclosure safety before publishing.
 
 ## Important
 
