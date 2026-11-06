@@ -15,10 +15,11 @@ Read [DATA_USE.md](https://github.com/flyrank-bih/flyrank-ml-internship-starter/
 
 For each monthly cutoff, the script creates:
 
-- Features from the 30 calendar days immediately before cutoff.
+- Features from the 30 calendar days immediately before cutoff, plus a prior 30-day context window for momentum.
+- A transparent momentum baseline comparing those two pre-cutoff windows.
 - A target from the following 30 calendar days, strictly beginning at cutoff.
 - GSC-only eligible rows using `gsc_data_available IS TRUE`.
-- Minimum prior impressions and minimum observed days in both windows.
+- Minimum prior impressions and minimum observed days in the older feature, recent feature, and forward outcome windows.
 - Train cutoffs June 2025–January 2026.
 - Validation cutoffs February and March 2026.
 - Final test cutoff June 2026, on clients held out from training/validation.
