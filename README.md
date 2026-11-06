@@ -22,12 +22,11 @@ Official portfolio and applied machine-learning project by **Sohila Khaled Abbas
 
 ---
 
-## 🏆 Key Achievements & Evaluation Results
+## ⚠️ Validation status — temporal audit in progress
 
-- **100.0% Holdout Precision@50**: Random Forest opportunity scoring model evaluated on 30,000 anonymized URLs across 32 client domains.
-- **0.9659 Holdout ROC-AUC**: Robust discrimination on unseen client domains (+77.3 percentage point lift over random base rate).
-- **Temporal Leakage Free**: Programmatic assertions blocking target-derived features (`trend_pct`, `is_declining_label`).
-- **Autonomous n8n Pipeline Handler**: End-to-end webhook execution triggering Docker n8n workflows with human-in-the-loop safety pauses.
+The original 30,000-row snapshot experiment is retained as a historical exploratory artifact, **not a valid prospective model evaluation**. Its feature aggregates and the `trend_direction` target are calculated from overlapping recent-period windows. A client-grouped split prevents client overlap, but it does not prevent temporal leakage. The previously published Precision@K and ROC-AUC figures are withdrawn pending a point-in-time rebuild from daily warehouse data. Do not use the old metrics as evidence of predictive performance.
+
+See [the temporal validation remediation plan](docs/temporal-validation-remediation.md).
 
 ---
 
@@ -53,7 +52,7 @@ flyrank-ml-internship-starter/
 │   └── flyrank_content_refresh_workflow.json # Exported Docker n8n automation workflow
 ├── scripts/
 │   ├── n8n_pipeline_handler.py # Agent pipeline execution handler
-│   ├── 01_prepare_features.py  # Feature engineering & temporal leakage assert
+│   ├── 01_prepare_features.py  # Snapshot feature preparation (not point-in-time validation)
 │   ├── 02_baseline_score.py    # Hand-written heuristic baseline
 │   ├── 03_train_model.py       # Random Forest classifier with grouped client split
 │   └── 04_evaluate_and_export.py # Evaluation metrics & action playbook export
@@ -94,5 +93,5 @@ python scripts/n8n_pipeline_handler.py
 
 ## 🤖 Transparency Diligence (AI Fluency Framework)
 
-> *"I built the n8n automation workflows, pipeline scaffolding, and CSS styling using Claude Code. I independently audited all temporal leakage exclusions, implemented the grouped client holdout split mathematics, verified model evaluation metrics against ground-truth data, and recorded the live unscripted demo walkthrough."*  
+> *"I built the n8n automation workflows, pipeline scaffolding, and CSS styling using Claude Code. I implemented and reviewed the original data-preparation and client-grouped experiment, then documented the temporal-window limitation and withdrew unvalidated predictive-performance claims."*  
 > — **Sohila Khaled Abbas**
