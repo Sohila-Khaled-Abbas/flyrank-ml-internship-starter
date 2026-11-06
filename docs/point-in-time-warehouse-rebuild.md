@@ -28,7 +28,7 @@ The client split is deterministic. The final score is therefore both forward in 
 
 ## Run locally (Windows PowerShell)
 
-The default configuration is intended for a 16 GB Windows machine: DuckDB is capped at 6 GB, uses four threads, and spills intermediate work to disk. Keep the spill and scratch locations on a drive with ample free space.
+The default configuration is deliberately conservative for a 16 GB Windows machine: DuckDB is capped at 4 GB and uses one thread. The script processes one monthly cutoff at a time and reads only the monthly Parquet partitions needed for that 90-day window. Keep the spill and scratch locations on a drive with ample free space.
 
 ```powershell
 cd path\to\flyrank-ml-internship-starter
@@ -36,22 +36,22 @@ cd path\to\flyrank-ml-internship-starter
 python -m pip install -r requirements.txt
 
 New-Item -ItemType Directory -Force "D:\duckdb_tmp\flyrank","D:\flyrank_warehouse_work" | Out-Null
-python scripts/06_point_in_time_warehouse_validation.py --memory-limit 6GB --threads 4 --temp-dir "D:\duckdb_tmp\flyrank" --scratch-dir "D:\flyrank_warehouse_work" --max-ml-rows 100000
+python scripts/06_point_in_time_warehouse_validation.py --memory-limit 4GB --threads 1 --temp-dir "D:\duckdb_tmp\flyrank" --scratch-dir "D:\flyrank_warehouse_work" --max-ml-rows 100000
 ```
 
 The Hugging Face READ token is requested through a hidden prompt. Do not paste it into chat, put it in the script, notebook, command history, or GitHub. The account behind the token must have accepted the dataset gate.
 
 ### Memory and sampling behavior
 
-- The full eligible point-in-time cohort is written to `cohort_features_local.parquet` in the scratch directory. It is not loaded wholesale into pandas.
-- DuckDB uses the configured memory limit and spills intermediate aggregation state into `--temp-dir`. The script allows up to 100 GB of spill files; make sure the selected drive has enough free space.
+- The full eligible point-in-time cohort is written as one Parquet part per monthly cutoff under `cohort_features_parts\`. Each query reads only the source months touched by its 90-day window. The parts are not loaded wholesale into pandas.
+- DuckDB uses the configured memory limit, one worker thread by default, and spills intermediate aggregation state into `--temp-dir`. The script allows up to 100 GB of spill files; make sure the selected drive has enough free space.
 - The client-level train/test assignment is made from the full cohort before model sampling, so the unseen-client test remains separated from training clients.
 - `--max-ml-rows` is the target sample size for each model partition. Training is sampled by target class; validation and test use deterministic uniform hash sampling, preserving class prevalence in expectation. Hash sampling can vary slightly around the target, and the exact available and loaded row counts are recorded in the summary.
 - When validation sampling is too small to retain both classes, rerun with a higher `--max-ml-rows` value, such as `250000`, provided the machine has enough memory.
 
 ## Outputs
 
-The aggregate `evaluation_summary.json` remains under `work/outputs/point_in_time/`. The full row-level `cohort_features_local.parquet` is written to the directory passed through `--scratch-dir`. Keep both outputs local and private; do not commit the full cohort or pseudonymous IDs. Review the aggregate summary for disclosure safety before publishing.
+The aggregate `evaluation_summary.json` remains under `work/outputs/point_in_time/`. The full row-level cohort is written as cutoff-specific Parquet files under `cohort_features_parts\` inside the directory passed through `--scratch-dir`. Keep both outputs local and private; do not commit the full cohort or pseudonymous IDs. Review the aggregate summary for disclosure safety before publishing.
 
 ## Important
 
