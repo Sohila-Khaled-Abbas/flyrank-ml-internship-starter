@@ -1,0 +1,35 @@
+name: point-in-time-validation-tests
+
+on:
+  pull_request:
+    paths:
+      - "scripts/06_point_in_time_warehouse_validation.py"
+      - "tests/**"
+      - ".github/workflows/point-in-time-validation-tests.yml"
+      - "requirements.txt"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/06_point_in_time_warehouse_validation.py"
+      - "tests/**"
+      - ".github/workflows/point-in-time-validation-tests.yml"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-time-window-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install duckdb numpy pandas scikit-learn
+      - name: Run synthetic time-window tests
+        run: python -m unittest discover -s tests -v
