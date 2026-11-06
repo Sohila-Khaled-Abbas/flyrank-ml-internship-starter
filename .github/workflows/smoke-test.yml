@@ -81,7 +81,11 @@ jobs:
               )
               # The former capstone notebook is deliberately retained as an unexecuted
               # historical record after withdrawing its overlapping-window metrics.
-              if p.endswith("capstone.ipynb") and "HISTORICAL EXPERIMENT ONLY" in first_markdown:
+              if (
+                  p.endswith("capstone.ipynb")
+                  and "exploratory snapshot experiment" in first_markdown.lower()
+                  and "not validated" in first_markdown.lower()
+              ):
                   print(f"::notice file={p}::{p} is an archival snapshot experiment; outputs were intentionally cleared.")
                   continue
               code = [c for c in nb.get("cells", []) if c.get("cell_type") == "code"]
