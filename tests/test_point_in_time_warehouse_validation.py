@@ -94,6 +94,19 @@ class PointInTimeCohortTests(unittest.TestCase):
         for column in ("older_impressions", "prev_impressions", *MODULE.FEATURES):
             self.assertAlmostEqual(float(declining[column]), float(non_declining[column]))
 
+    def test_cutoff_sql_uses_source_grain_for_observed_day_counts(self):
+        sql = MODULE.build_cohort_sql(
+            min_impressions=1,
+            min_days=20,
+            decline_threshold=0.20,
+            fact_relation="synthetic_fact",
+            cutoffs=[("2026-06-01", "test")],
+        )
+        self.assertNotIn("COUNT(DISTINCT CASE", sql)
+        self.assertIn("THEN 1 ELSE 0 END) AS observed_days_prev30", sql)
+        self.assertIn("THEN 1 ELSE 0 END) AS observed_days_older30", sql)
+        self.assertIn("THEN 1 ELSE 0 END) AS observed_days_next30", sql)
+
     def test_null_measurement_is_not_counted_as_an_observed_day(self):
         frame = self.build(min_days=29, missing_recent_day=True)
         self.assertEqual(len(frame), 1)
