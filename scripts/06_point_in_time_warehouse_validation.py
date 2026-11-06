@@ -54,6 +54,12 @@ def parse_args():
     p.add_argument("--decline-threshold", type=float, default=0.20)
     p.add_argument("--test-size", type=float, default=0.20)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--memory-limit", default="6GB", help="DuckDB memory budget; leave headroom for Windows and Python.")
+    p.add_argument("--threads", type=int, default=4)
+    default_temp = Path("D:/duckdb_tmp/flyrank") if Path("D:/").exists() else ROOT / "work" / "duckdb_tmp"
+    p.add_argument("--temp-dir", default=str(default_temp), help="DuckDB spill directory; prefer a drive with ample free space.")
+    p.add_argument("--scratch-dir", default=None, help="Directory for the full local Parquet cohort; defaults to the report output directory.")
+    p.add_argument("--max-ml-rows", type=int, default=100_000, help="Maximum rows loaded for each model partition.")
     return p.parse_args()
 
 
@@ -72,8 +78,7 @@ def cutoff_values(cutoffs=None):
     return values
 
 
-def build_cohort(
-    con,
+def build_cohort_sql(
     min_impressions: int,
     min_days: int,
     decline_threshold: float,
@@ -81,9 +86,23 @@ def build_cohort(
     fact_relation: str = FACT,
     cutoffs=None,
 ):
-    # The two feature windows end strictly before cutoff. The label window starts at cutoff.
-    sql = f"""
-    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(cutoffs)}),
+    rows = list(cutoffs) if cutoffs is not None else []
+    if cutoffs is None:
+        for split, dates in (
+            ("train", TRAIN_CUTOFFS),
+            ("validation", VALIDATION_CUTOFFS),
+            ("test", TEST_CUTOFFS),
+        ):
+            rows.extend((d, split) for d in dates)
+    if not rows:
+        raise ValueError("At least one cutoff is required.")
+
+    first_report_date = min(pd.Timestamp(date) for date, _ in rows) - pd.Timedelta(days=60)
+    end_report_date = max(pd.Timestamp(date) for date, _ in rows) + pd.Timedelta(days=30)
+
+    # Explicit global bounds allow date pruning before joining daily rows to the cutoffs.
+    return f"""
+    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(rows)}),
     daily AS (
         SELECT
             CAST(report_date AS DATE) AS report_date,
@@ -94,6 +113,8 @@ def build_cohort(
             NULLIF(gsc_avg_position, 0)::DOUBLE AS avg_position
         FROM {fact_relation}
         WHERE gsc_data_available IS TRUE
+          AND report_date >= DATE '{first_report_date:%Y-%m-%d}'
+          AND report_date < DATE '{end_report_date:%Y-%m-%d}'
     ),
     cohort AS (
         SELECT
@@ -150,9 +171,29 @@ def build_cohort(
       AND observed_days_older30 >= {min_days}
       AND observed_days_next30 >= {min_days}
     """
+
+
+def build_cohort(
+    con,
+    min_impressions: int,
+    min_days: int,
+    decline_threshold: float,
+    *,
+    fact_relation: str = FACT,
+    cutoffs=None,
+):
+    # Small synthetic tests use this in-memory helper. main() writes the full warehouse
+    # result to Parquet instead of collecting every row in pandas.
+    sql = build_cohort_sql(
+        min_impressions,
+        min_days,
+        decline_threshold,
+        fact_relation=fact_relation,
+        cutoffs=cutoffs,
+    )
     frame = con.sql(sql).df()
     if frame.empty:
-        raise RuntimeError("No eligible cohort rows returned. Check gate access, table schema, and thresholds.")
+        raise RuntimeError("No eligible cohort rows returned. Check source schema and thresholds.")
     frame["log1p_prev_impressions"] = np.log1p(frame["prev_impressions"].clip(lower=0))
     frame["log1p_prev_clicks"] = np.log1p(frame["prev_clicks"].clip(lower=0))
     frame["log1p_older_impressions"] = np.log1p(frame["older_impressions"].clip(lower=0))
@@ -161,6 +202,88 @@ def build_cohort(
     ).clip(lower=0, upper=1).fillna(0)
     frame["target_decline"] = frame["target_decline"].astype(int)
     return frame
+
+
+def sql_path(path: Path) -> str:
+    return str(path.resolve()).replace("\\", "/").replace("'", "''")
+
+
+def configure_duckdb(con, memory_limit: str, threads: int, temp_dir: Path) -> None:
+    if threads < 1:
+        raise ValueError("--threads must be at least 1.")
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    con.execute(f"SET memory_limit = '{memory_limit}'")
+    con.execute(f"SET threads = {threads}")
+    con.execute(f"SET temp_directory = '{sql_path(temp_dir)}'")
+    con.execute("SET max_temp_directory_size = '100GB'")
+    con.execute("SET preserve_insertion_order = false")
+
+
+HASH_BUCKETS = 10_000_019
+
+
+def fetch_model_sample(con, predicate: str, max_rows: int, *, stratified: bool):
+    # Hash sampling is repeatable. Training is class-stratified; validation/test
+    # are uniformly sampled so their observed class prevalence is retained in expectation.
+    counts = con.execute(
+        f"""
+        SELECT target_decline, COUNT(*) AS row_count
+        FROM cohort_with_group
+        WHERE {predicate}
+        GROUP BY target_decline
+        ORDER BY target_decline
+        """
+    ).df()
+    available = int(counts["row_count"].sum()) if not counts.empty else 0
+    if available == 0:
+        return pd.DataFrame(), {"available_rows": 0, "loaded_rows": 0, "sampled": False}
+
+    hash_expr = "hash(client_hash_id, content_hash_id, cutoff_date)"
+    if available <= max_rows:
+        sample_condition = "TRUE"
+        strategy = "all eligible rows"
+    elif stratified:
+        conditions = []
+        per_class_cap = max(1, max_rows // max(1, len(counts)))
+        for row in counts.itertuples(index=False):
+            row_count = int(row.row_count)
+            if row_count <= per_class_cap:
+                conditions.append(f"target_decline = {int(row.target_decline)}")
+            else:
+                threshold = max(1, int((per_class_cap / row_count) * HASH_BUCKETS * 0.98))
+                conditions.append(
+                    f"(target_decline = {int(row.target_decline)} AND {hash_expr} % {HASH_BUCKETS} < {threshold})"
+                )
+        sample_condition = "(" + " OR ".join(conditions) + ")"
+        strategy = "deterministic hash sample stratified by target class"
+    else:
+        threshold = max(1, int((max_rows / available) * HASH_BUCKETS * 0.98))
+        sample_condition = f"{hash_expr} % {HASH_BUCKETS} < {threshold}"
+        strategy = "deterministic uniform hash sample; class prevalence preserved in expectation"
+
+    frame = con.execute(
+        f"""
+        SELECT
+            ln(1.0 + greatest(prev_impressions, 0.0)) AS log1p_prev_impressions,
+            ln(1.0 + greatest(prev_clicks, 0.0)) AS log1p_prev_clicks,
+            ln(1.0 + greatest(older_impressions, 0.0)) AS log1p_older_impressions,
+            mean_position_prev30,
+            observed_days_prev30,
+            CAST(target_decline AS INTEGER) AS target_decline,
+            CASE WHEN older_impressions IS NULL OR older_impressions = 0 THEN 0.0
+                 ELSE greatest(0.0, least(1.0, 1.0 - prev_impressions / older_impressions))
+            END AS baseline_score
+        FROM cohort_with_group
+        WHERE {predicate}
+          AND ({sample_condition})
+        """
+    ).df()
+    return frame, {
+        "available_rows": available,
+        "loaded_rows": int(len(frame)),
+        "sampled": int(len(frame)) < available,
+        "strategy": strategy,
+    }
 
 
 def metric_block(y, scores, k=100):
