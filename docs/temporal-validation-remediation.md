@@ -36,7 +36,7 @@ Use the daily warehouse fact at grain `report_date × client × content`. For ea
 
 ## Current limitation
 
-The repository's public starter CSV does not contain the row-level dates needed to reconstruct point-in-time features and future labels. The larger daily warehouse release is described in the data dictionary, but the required warehouse data and access credentials are not part of this repository. Therefore, this change documents and enforces the validation boundary; it does **not** claim to have retrained a temporally valid model or generated replacement performance metrics.
+The project work used both the 30,000-row starter snapshot and the approximately 79-million-row daily warehouse release queried with DuckDB. However, the public GitHub repository currently contains the starter snapshot and project artifacts, not the larger warehouse files. The daily warehouse is the appropriate source for the point-in-time rebuild, provided the original authorized dataset access and local/queryable files are still available. This branch documents and enforces the validation boundary; it does **not** claim to have retrained a temporally valid model or generated replacement performance metrics.
 
 ## Historical artifact policy
 
