@@ -40,7 +40,7 @@ FEATURES = [
     "log1p_prev_clicks",
     "log1p_older_impressions",
     "mean_position_prev30",
-    "gsc_observed_days_prev30",
+    "observed_days_prev30",
 ]
 
 
