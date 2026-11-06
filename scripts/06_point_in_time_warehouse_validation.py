@@ -100,7 +100,10 @@ def build_cohort_sql(
     first_report_date = min(pd.Timestamp(date) for date, _ in rows) - pd.Timedelta(days=60)
     end_report_date = max(pd.Timestamp(date) for date, _ in rows) + pd.Timedelta(days=30)
 
-    # Explicit global bounds allow date pruning before joining daily rows to the cutoffs.
+    # The warehouse fact grain is report_date × client × content. Within each
+    # client-content group, counting non-null daily rows is equivalent to counting
+    # distinct observed dates and avoids three memory-heavy DISTINCT aggregates.
+    # The single-cutoff execution in main() also bounds each scan to one 90-day window.
     return f"""
     WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(rows)}),
     daily AS (
@@ -541,6 +544,7 @@ def main():
         "target": f"next-30-day impressions decline greater than {args.decline_threshold:.0%} versus immediately preceding 30 days",
         "baseline": "prior 30-day decline score relative to the 30 days before that; pre-cutoff only",
         "availability_rule": "gsc_data_available IS TRUE; minimum observed days enforced in both windows",
+        "observed_day_counting": "Counts non-null daily records; relies on source grain report_date × client × content.",
         "minimum_prior_impressions": args.min_impressions,
         "minimum_observed_days_each_window": args.min_observed_days,
         "feature_columns": FEATURES,
