@@ -226,6 +226,8 @@ def write_report(final_frame: pd.DataFrame, model_results: dict, report_path: Pa
 
     report = f"""# FlyRank Refresh Opportunity Model Report
 
+> **VALIDATION STATUS: EXPLORATORY SNAPSHOT ONLY — NOT TEMPORALLY VALIDATED.** The bundled 30,000-row snapshot contains feature aggregates that overlap the target period. A client-grouped split does not resolve temporal leakage. The metrics and ranked scores in this report are historical experiment outputs only; do not present them as prospective predictive performance. Use the point-in-time warehouse workflow for a separately evaluated future-window model.
+
 This report is generated from the bundled anonymized starter dataset (`data/raw/content_refresh_anonymized.csv`).
 The model ranks existing content for refresh review. It does not use titles, URLs, client names, domains, or keywords.
 
