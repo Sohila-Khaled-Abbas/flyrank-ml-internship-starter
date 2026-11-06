@@ -57,33 +57,42 @@ def parse_args():
     return p.parse_args()
 
 
-def cutoff_values():
-    rows = []
-    for split, dates in (
-        ("train", TRAIN_CUTOFFS),
-        ("validation", VALIDATION_CUTOFFS),
-        ("test", TEST_CUTOFFS),
-    ):
-        rows.extend((d, split) for d in dates)
+def cutoff_values(cutoffs=None):
+    rows = list(cutoffs) if cutoffs is not None else []
+    if cutoffs is None:
+        for split, dates in (
+            ("train", TRAIN_CUTOFFS),
+            ("validation", VALIDATION_CUTOFFS),
+            ("test", TEST_CUTOFFS),
+        ):
+            rows.extend((d, split) for d in dates)
     values = ",\n".join(
         f"(DATE '{date}', '{split}')" for date, split in rows
     )
     return values
 
 
-def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: float):
+def build_cohort(
+    con,
+    min_impressions: int,
+    min_days: int,
+    decline_threshold: float,
+    *,
+    fact_relation: str = FACT,
+    cutoffs=None,
+):
     # The two feature windows end strictly before cutoff. The label window starts at cutoff.
     sql = f"""
-    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values()}),
+    WITH cutoffs(cutoff_date, split_name) AS (VALUES {cutoff_values(cutoffs)}),
     daily AS (
         SELECT
             CAST(report_date AS DATE) AS report_date,
             client_hash_id,
             content_hash_id,
-            COALESCE(gsc_impressions, 0)::DOUBLE AS impressions,
-            COALESCE(gsc_clicks, 0)::DOUBLE AS clicks,
+            gsc_impressions::DOUBLE AS impressions,
+            gsc_clicks::DOUBLE AS clicks,
             NULLIF(gsc_avg_position, 0)::DOUBLE AS avg_position
-        FROM {FACT}
+        FROM {fact_relation}
         WHERE gsc_data_available IS TRUE
     ),
     cohort AS (
@@ -104,6 +113,7 @@ def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: fl
             COUNT(DISTINCT CASE
                 WHEN d.report_date >= c.cutoff_date - INTERVAL 60 DAY
                  AND d.report_date < c.cutoff_date - INTERVAL 30 DAY
+                 AND d.impressions IS NOT NULL
                 THEN d.report_date END) AS observed_days_older30,
             AVG(CASE WHEN d.report_date >= c.cutoff_date - INTERVAL 30 DAY
                       AND d.report_date < c.cutoff_date
@@ -119,6 +129,7 @@ def build_cohort(con, min_impressions: int, min_days: int, decline_threshold: fl
             COUNT(DISTINCT CASE
                 WHEN d.report_date >= c.cutoff_date
                  AND d.report_date < c.cutoff_date + INTERVAL 30 DAY
+                 AND d.impressions IS NOT NULL
                 THEN d.report_date END) AS observed_days_next30
         FROM cutoffs c
         JOIN daily d
